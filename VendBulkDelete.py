@@ -8,17 +8,17 @@ import tkinter
 import CsvUtil
 import traceback
 
-gui = None
+#gui = None
 api = None
 
-
-def startProcess():
+def startProcess(bulkDelGui):
     """
         The entry point to begin retrieving customers to delete and process the
         bulk delete task. Handles all the basic error checks and feedback to the
         user through the GUI status message/bar, before creating API class.
     """
-
+    global gui
+    gui = bulkDelGui
     if not gui.entriesHaveValues():
         ## error
         gui.setStatus("Please check values for prefix, token and CSV...")
@@ -282,14 +282,7 @@ def getCustCodeToId(customers):
 
     return codeToId
 
-def openGui(passedGui=None):
-    global gui
-    gui = None
-    if passedGui:
-        gui = passedGui
-    else:
-        gui = VendBulkDeleteGUI(startProcess)
-        gui.main()
+
 
 
 if __name__ == "__main__":

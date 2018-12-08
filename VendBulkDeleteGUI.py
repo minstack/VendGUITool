@@ -1,6 +1,7 @@
 from tkinter import *
 import threading
 from tkinter.filedialog import askopenfilename
+import ControlUtil
 #from tkFileDialog import askopenfilename
 
 class VendBulkDeleteGUI:
@@ -10,7 +11,8 @@ class VendBulkDeleteGUI:
             Constructor for the GUI. The delete function passed is the entry
             function in the calling class/module to bind to the delete button.
         """
-
+        self.TEXT_BOXES = []
+        self.BUTTONS = []
         self.__deletefunc = deletefunc
         self.root = root
         if not self.root:
@@ -57,12 +59,7 @@ class VendBulkDeleteGUI:
         self.txtPrefix.grid(row=1,column=1, sticky=W)
         self.txtToken.grid(row=2,column=1, sticky=W)
 
-        csvframe = Frame(mainFrame)
-        self.txtCsv = Entry(csvframe)
-
-        #self.txtCsv.pack(side=LEFT)
-        #self.btnOpenCsvDialog.pack()
-        #csvframe.grid(row=3,column=1, sticky=W)
+        ControlUtil.addControl(self.TEXT_BOXES, self.txtPrefix, self.txtToken)
 
     def __loadButtons__(self, mainFrame):
         """
@@ -79,10 +76,14 @@ class VendBulkDeleteGUI:
         radioFrame.grid(row=4, column=1)
 
         self.entityType = StringVar()
-        Radiobutton(radioFrame, text="Customer", value='Customers', variable=self.entityType, command=self.__switchEntityType).pack(side=LEFT)
+        custRadio = Radiobutton(radioFrame, text="Customer", value='Customers', variable=self.entityType, command=self.__switchEntityType)
+        custRadio.invoke()
+        custRadio.pack(side=LEFT)
         temp = Radiobutton(radioFrame, text="Products", value='Products', variable=self.entityType, command=self.__switchEntityType)
         temp.configure(state=DISABLED)
         temp.pack()
+
+        ControlUtil.addControl(self.BUTTONS, self.btnDelCust, self.btnReset)
 
     def __loadCsvControl__(self, mainFrame):
         """
@@ -107,6 +108,8 @@ class VendBulkDeleteGUI:
         self.btnDeleteFile = Button(csvFrame, text="-", font="Helvetica 14 bold", command=self.deleteFileFromList, width=3)
         self.btnDeleteFile.pack()
 
+        ControlUtil.addControl(self.BUTTONS, self.btnOpenCsvDialog, self.btnDeleteFile)
+
     def __loadCheckListControl__(self, mainFrame):
         """
             Loads the check list controls onto the given parent frame
@@ -121,6 +124,8 @@ class VendBulkDeleteGUI:
         self.chkPaConfirm.grid(row=1, sticky=W)
         self.chkTokenExpiry = Checkbutton(checklistFrame, text="Token Expiry Set", variable=self.tokenExpiry)
         self.chkTokenExpiry.grid(row=2, sticky=W)
+
+        ControlUtil.addControl(self.BUTTONS, self.chkPaConfirm, self.chkTokenExpiry)
 
     def __loadMessageControls__(self, mainFrame):
         """
@@ -147,8 +152,7 @@ class VendBulkDeleteGUI:
         """
         self.setStatus("")
         self.setReadyState()
-        self.txtToken.delete(0,END)
-        self.txtPrefix.delete(0,END)
+        ControlUtil.clearTextBoxes(self.TEXT_BOXES)
         self.paConfirmation.set(0)
         self.tokenExpiry.set(0)
         del self.csvList[:]
@@ -173,7 +177,7 @@ class VendBulkDeleteGUI:
             Returns true/false whether the required input values have been
             provided
         """
-        return (len(self.txtPrefix.get().strip()) > 0) and (len(self.txtToken.get().strip()) > 0) and (len(self.csvList) > 0)
+        return ControlUtil.entriesHaveValues(self.TEXT_BOXES) and (len(self.csvList) > 0)
 
     def startThread(self):
         """
@@ -182,7 +186,7 @@ class VendBulkDeleteGUI:
         """
         self.setStatus("")
         self.setDeletingState()
-        thr = threading.Thread(target=self.__deletefunc, args=(), kwargs={})
+        thr = threading.Thread(target=self.__deletefunc, args=([self]), kwargs={})
 
         thr.start()
         #self.setReadyState()
@@ -244,6 +248,23 @@ class VendBulkDeleteGUI:
         self.chkPaConfirm.config(state=NORMAL)
         self.chkTokenExpiry.config(state=NORMAL)
         self.root.update()
+
+    def setDeletingState(self):
+        """ Sets all the controls to disabled state to prevent any multi-clicks"""
+        self.__setControlState(self.TEXT_BOXES, DISABLED)
+        self.__setControlState(self.BUTTONS, DISABLED)
+        self.root.update()
+
+    def setReadyState(self):
+        """ Resets all controls back to normal state."""
+
+        self.__setControlState(self.TEXT_BOXES, NORMAL)
+        self.__setControlState(self.BUTTONS, NORMAL)
+        self.root.update()
+
+    def __setControlState(self, controls, state):
+        for c in controls:
+            c.config(state=state)
 
     def main(self):
         """ Main loop for this GUI. """
