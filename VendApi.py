@@ -65,8 +65,8 @@ class VendApi:
         return self.__getRequest__(self.__domain + self.__ENDPOINTS['outlets'])
 
     def getProducts(self):
-        return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'])
-
+        return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'] + '?deleted=false')
+        #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'], type='products')
     def __getSearch__(self, url, type='', deleted='false', offset='', pageSize='10000'):
         """
             Base method for search API calls. Returns the 'data' array of the
