@@ -73,7 +73,16 @@ class VendBulkDeleteGUI:
         self.btnDelCust.pack(side=RIGHT, padx=5)
         self.btnReset = Button(btnframe, text="Reset", command=self.reset)
         self.btnReset.pack()
-        btnframe.grid(row=4, column=1, padx=5)
+        btnframe.grid(row=5, column=1, padx=5, pady=10)
+
+        radioFrame = Frame(mainFrame)
+        radioFrame.grid(row=4, column=1)
+
+        self.entityType = StringVar()
+        Radiobutton(radioFrame, text="Customer", value='Customers', variable=self.entityType, command=self.__switchEntityType).pack(side=LEFT)
+        temp = Radiobutton(radioFrame, text="Products", value='Products', variable=self.entityType, command=self.__switchEntityType)
+        temp.configure(state=DISABLED)
+        temp.pack()
 
     def __loadCsvControl__(self, mainFrame):
         """
@@ -122,11 +131,15 @@ class VendBulkDeleteGUI:
         self.lblStatus.pack(side=BOTTOM, fill=X)
 
         resultFrame = Frame(mainFrame)
-        resultFrame.grid(row=5,column=0, columnspan=3, rowspan=4)
+        resultFrame.grid(row=6,column=0, columnspan=3, rowspan=4)
 
         self.resultText = StringVar()
         resultLabel = Message(resultFrame, textvariable=self.resultText,font="Helvetica 16", width=500)
         resultLabel.pack(pady=15)
+
+    def __switchEntityType(self):
+        self.btnDelCust.config(text="Delete {0}".format(self.entityType.get()))
+        # switch the process function
 
     def reset(self):
         """

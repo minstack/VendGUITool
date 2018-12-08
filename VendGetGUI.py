@@ -80,11 +80,14 @@ class VendGetGUI:
 
         Label(radioFrame, text='Type', font="Helvetica 16 bold").pack()
 
-        Radiobutton(radioFrame, text="Customers", variable=self.entityType, value='customers', font="Helvetica 14").pack(anchor=W)
-        Radiobutton(radioFrame, text="Products", variable=self.entityType, value='products', font="Helvetica 14").pack(anchor=W)
+        Radiobutton(radioFrame, text="Customers", variable=self.entityType, value='customers', font="Helvetica 14").pack(anchor=W, pady=5)
+        Radiobutton(radioFrame, text="Products", variable=self.entityType, value='products', font="Helvetica 14").pack(anchor=W, pady=5)
 
+        temp = Radiobutton(radioFrame, text="Sales", variable=self.entityType, value='sales', font="Helvetica 14")
+        temp.configure(state=DISABLED)
+        temp.pack(anchor=W, pady=5)
 
-        radioFrame.grid(row=0, column=3, rowspan=4, padx=15, sticky=N)
+        radioFrame.grid(row=0, column=3, rowspan=4, padx=20, sticky=N)
 
     def __loadMessageControls__(self, mainFrame):
         """
