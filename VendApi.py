@@ -63,6 +63,8 @@ class VendApi:
         """
             Base method for search API calls. Returns the 'data' array of the
             corresponding objects. Returns None if the request is unsuccessful.
+            Currently, the regular customers endpoint doesn't work properly
+            with deleted flag; this will have to do at the moment.
         """
         search = "{0}?type={1}&deleted={2}&page_size={3}&offset={4}"
         endpoint = search.format(url, type, deleted, pageSize, offset)
