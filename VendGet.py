@@ -7,8 +7,10 @@ import datetime as dt
 
 api = None
 
-def start(gui):
+def start(getGui):
 
+    global gui
+    gui = getGui
     if not gui.entriesHaveValues():
         ## error
         gui.setStatus("Please have values for prefix, token and dates...")
