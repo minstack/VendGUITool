@@ -8,6 +8,7 @@ class VendGUIToolGui:
 
         self.root = Tk()
         self.root.geometry("700x500")
+        self.root.title("Vend GUI Tool")
         self.root.call('tk', 'scaling', '2.0')
         self.note = Notebook(self.root)
         self.note.pack(fill=BOTH, expand=1)
