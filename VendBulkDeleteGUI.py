@@ -22,10 +22,10 @@ class VendBulkDeleteGUI:
         #self.root.geometry("650x450")
             self.root.minsize(650,450)
         #self.root.resizable(0,0)
-            self.root.title("Vend Bulk Customer Delete")
+            self.root.title("Vend Bulk Delete")
             self.root.pack_propagate(0)
 
-        header = Label(self.root, text="Bulk Customer Delete", bd=1, font="San-Serif 18 bold", bg="#41B04B", fg="white")
+        header = Label(self.root, text="Bulk Delete", bd=1, font="San-Serif 18 bold", bg="#41B04B", fg="white")
         header.pack(side=TOP, anchor=W, fill=X)
 
         # container for the main widgets

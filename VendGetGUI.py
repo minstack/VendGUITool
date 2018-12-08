@@ -21,9 +21,9 @@ class VendGetGUI:
         #self.root.geometry("650x450")
             self.root.minsize(650,450)
         #self.root.resizable(0,0)
-            self.root.title("Vend Get Entity")
+            self.root.title("Vend Retrieve")
             self.root.pack_propagate(0)
-        header = Label(self.root, text="Get Entity", bd=1, font="San-Serif 18 bold", bg="#41B04B", fg="white")
+        header = Label(self.root, text="Retrieve", bd=1, font="San-Serif 18 bold", bg="#41B04B", fg="white")
         header.pack(side=TOP, anchor=W, fill=X)
 
         # container for the main widgets
@@ -65,14 +65,13 @@ class VendGetGUI:
         self.txtDateTo.grid(row=4,column=1, sticky=W, pady=5)
 
         ControlUtil.addControl(self.TEXT_BOXES, self.txtToken, self.txtPrefix, self.txtDateFrom, self.txtDateTo)
-        self.setRunningState()
     def __loadButtons__(self, mainFrame):
         """
             Loads the button controls onto the given parent frame
         """
         btnframe = Frame(mainFrame)
-        self.btnDelCust = Button(btnframe, text="Delete Customers", command=self.startThread)
-        self.btnDelCust.pack(side=RIGHT, padx=5)
+        self.btnExport = Button(btnframe, text="Export Customers", command=self.startThread)
+        self.btnExport.pack(side=RIGHT, padx=5)
         self.btnReset = Button(btnframe, text="Reset", command=self.reset)
         self.btnReset.pack()
         btnframe.grid(row=6, column=1, padx=10)
@@ -93,7 +92,7 @@ class VendGetGUI:
         temp.pack(anchor=W, pady=5)
 
         radioFrame.grid(row=0, column=3, rowspan=4, padx=20, sticky=N)
-        ControlUtil.addControl(self.BUTTONS, self.btnDelCust, self.btnReset)
+        ControlUtil.addControl(self.BUTTONS, self.btnExport, self.btnReset)
 
     def __loadMessageControls__(self, mainFrame):
         """
@@ -125,12 +124,7 @@ class VendGetGUI:
             Returns true/false whether the required input values have been
             provided
         """
-        result = True;
-
-        for tbox in self.TEXT_BOXES:
-            result = eval('len(tbox.get().strip()) > 0 and result')
-        #return (len(self.txtPrefix.get().strip()) > 0) and (len(self.txtToken.get().strip()) > 0)
-        return result
+        return ControlUtil.entriesHaveValues(self.TEXT_BOXES)
 
     def startThread(self):
         """
