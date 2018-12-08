@@ -32,12 +32,13 @@ def writeListToCSV(list, colHeader, title, prefix):
     #gui.setStatus("Writing {0}...".format(filename))
 
     desktop = expanduser("~") + '/' + 'Desktop/'
+    filepath = desktop + filename
 
-    with open(desktop + filename, "w", newline='', encoding='utf-8') as file:
+    with open(filepath, "w", newline='', encoding='utf-8') as file:
         writer = csv.writer(file, delimiter=',', quotechar='"',quoting=csv.QUOTE_ALL)
         for row in list:
             writer.writerow([row])
 
     #gui.setStatus("Write {0} completed...".format(filename))
 
-    return filename
+    return filepath
