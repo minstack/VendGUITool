@@ -227,11 +227,15 @@ def getOpenSaleMatch(custList, codeToId, salesList):
 
 def writeCustomersToCSV(custList):
     """ Returns the exported CSV filename of the provided customers """
-    return CsvUtil.writeListToCSV(custList, "customer_code", "failed_customers", api.getPrefix())
+    filepath = CsvUtil.writeListToCSV(custList, "customer_code", "failed_customers", api.getPrefix())
+
+    return filepath.split('/')[-1:]
 
 def writeOpenSalesToCsv(salesList):
     """ Returns the exported CSV filename of the provided sales """
-    return CsvUtil.writeListToCSV(salesList, "invoice_number", "open_sales", api.getPrefix())
+    filepath = CsvUtil.writeListToCSV(salesList, "invoice_number", "open_sales", api.getPrefix())
+
+    return filepath.split('/')[-1:]
 
 def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
     """
