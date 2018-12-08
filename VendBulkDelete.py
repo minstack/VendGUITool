@@ -21,7 +21,7 @@ def startProcess(bulkDelGui):
     gui = bulkDelGui
     if not gui.entriesHaveValues():
         ## error
-        gui.setStatus("Please check values for prefix, token and CSV...")
+        gui.setStatus("Please have values for prefix, token and CSV...")
         gui.setReadyState()
         return
 

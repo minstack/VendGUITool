@@ -6,13 +6,13 @@ import ControlUtil
 
 class VendGetGUI:
 
-    def __init__(self, root=None, callback=None):
+    def __init__(self,  callback=None, root=None):
         """
             Constructor for the GUI. The delete function passed is the entry
             function in the calling class/module to bind to the delete button.
         """
 
-        if not callback:
+        if callback:
             self.callback = callback
 
         self.TEXT_BOXES = []
@@ -78,7 +78,7 @@ class VendGetGUI:
         self.btnExport.pack(side=RIGHT, padx=5)
         self.btnReset = Button(btnframe, text="Reset", command=self.reset)
         self.btnReset.pack()
-        btnframe.grid(row=6, column=1, padx=10)
+        btnframe.grid(row=6, column=0, pady=5, columnspan=4)
 
         radioFrame = Frame(mainFrame)
 
@@ -137,7 +137,7 @@ class VendGetGUI:
         """
         self.setStatus("")
         self.setRunningState()
-        thr = threading.Thread(target=self.callback, args=(self), kwargs={})
+        thr = threading.Thread(target=self.callback, args=([self]), kwargs={})
 
         thr.start()
         #self.setReadyState()
@@ -165,6 +165,11 @@ class VendGetGUI:
         ControlUtil.setControlState(self.BUTTONS, NORMAL)
         self.root.update()
 
+    def getDateFrom(self):
+        return self.txtDateFrom.get()
+
+    def getDateTo(self):
+        return self.txtDateTo.get()
 
     def main(self):
         """ Main loop for this GUI. """
