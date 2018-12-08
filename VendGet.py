@@ -54,9 +54,26 @@ def getVendObjects(api, utcDateFrom, utcDateTo, entityType):
 
     objects = endpointCall[entityType]()
 
-    print(objects)
-    print(len(objects))
+    filteredObj = filterByDateRange(objects, utcDateFrom, utcDateTo)
 
+    #export to temp CSV
+
+def filterByDateRange(objs, dateFrom, dateTo):
+
+    filtered = []
+    dtfmt = "%Y-%m-%d %H:%M"
+    dFrom = dt.strptime(dateFrom, dtfmt)
+    dTo = dt.strptime(dateTo, dtfmt)
+
+    for o in objs:
+        otime = o['created_at'].replace('T', ' ')
+        oDate = dt.strptime(otime, dtfmt)
+
+        if dFrom <= oDate <= dTo:
+            filtered.append(o)
+
+    return filtered
+    
 def getTimeZone(api):
     global outlets
 
