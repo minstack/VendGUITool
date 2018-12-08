@@ -3,13 +3,14 @@ from VendApi import *
 import re
 from VendGetGUI import *
 import CsvUtil
-import datetime as dt
+from datetime import datetime as dt
+import expanduser
 
 api = None
 START_DAY_TIME = "00:00"
 END_DAY_TIME = "23:59"
 
-def start(getGui):
+def start(getGui, callback=None):
 
     global gui
     gui = getGui
@@ -38,12 +39,59 @@ def start(getGui):
     global api
     api = VendApi(gui.getPrefix(), gui.getToken())
     objType = gui.getSelectedType()
+
     timezone = getTimeZone(api)
 
+    gui.setStatus("Converting time to UTC format...")
     utcDateFrom = ControlUtil.getUtcTime(localDateFrom, START_DAY_TIME, timezone)
     utcDateTo = ControlUtil.getUtcTime(localDateTo, END_DAY_TIME, timezone)
 
+    gui.setStatus("Retrieving {0} for {1}...".format(objType, gui.getPrefix()))
     vendObjs = getVendObjects(api, utcDateFrom, utcDateTo, objType)
+
+    if len(vendObjs) == 0:
+        gui.setStatus("There was nothing returned. Please check your dates...")
+        gui.setReadyState()
+        return
+
+    gui.setStatus("Retrieved {0} {1}...".format(len(vendObjs), objType))
+
+    objColHeader = {
+        "products" : "id",
+        "customers" : "customer_code"
+    }
+
+    currCsvHeader = objColHeader[objType]
+
+    listToWrite = getColumnList(vendObjs, currCsvHeader)
+    gui.setStatus("Exporting temp CSV for bulk delete...")
+    filepath = exportToCsv(listToWrite, currCsvHeader, objType)
+    filename = filepath.split('/')[-1:]
+
+    msg = "Exported {0} {1} to {2}\ntemporarily to desktop.\n\n".format(len(vendObjs), objType, filename)
+    msg += "You can now go to Bulk Delete tab to delete."
+    gui.setResult(msg)
+    gui.setStatus('Done...')
+    gui.setReadyState()
+
+    if callback:
+        kargs = {
+            "prefix" : gui.getPrefix(),
+            "token" : gui.getToken(),
+            "filepath" : filepath,
+            "filename" : filename
+        }
+        callback(kargs)
+
+def exportToCsv(list, header, type):
+    return CsvUtil.writeListToCSV(list, header, type, "")
+
+def getColumnList(objs, header):
+    list = []
+    for o in objs:
+        list.append(o[header])
+
+    return list
 
 
 def getVendObjects(api, utcDateFrom, utcDateTo, entityType):
@@ -56,7 +104,7 @@ def getVendObjects(api, utcDateFrom, utcDateTo, entityType):
 
     filteredObj = filterByDateRange(objects, utcDateFrom, utcDateTo)
 
-    #export to temp CSV
+    return filteredObj
 
 def filterByDateRange(objs, dateFrom, dateTo):
 
@@ -67,13 +115,14 @@ def filterByDateRange(objs, dateFrom, dateTo):
 
     for o in objs:
         otime = o['created_at'].replace('T', ' ')
+        otime = otime[:16]
         oDate = dt.strptime(otime, dtfmt)
 
         if dFrom <= oDate <= dTo:
             filtered.append(o)
 
     return filtered
-    
+
 def getTimeZone(api):
     global outlets
 
