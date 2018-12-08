@@ -1,6 +1,6 @@
 import csv
 from VendApi import *
-from VendBulkCustomerDelGUI import *
+from VendBulkDeleteGUI import *
 import re
 import threading
 import queue
@@ -288,7 +288,7 @@ def openGui(passedGui=None):
     if passedGui:
         gui = passedGui
     else:
-        gui = VendBulkCustomerDelGUI(startProcess)
+        gui = VendBulkDeleteGUI(startProcess)
         gui.main()
 
 

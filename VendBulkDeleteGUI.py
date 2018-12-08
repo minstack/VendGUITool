@@ -3,7 +3,7 @@ import threading
 from tkinter.filedialog import askopenfilename
 #from tkFileDialog import askopenfilename
 
-class VendBulkCustomerDelGUI:
+class VendBulkDeleteGUI:
 
     def __init__(self, deletefunc, root=None):
         """
