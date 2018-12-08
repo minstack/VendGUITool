@@ -14,7 +14,8 @@ class VendApi:
         "cust" : "api/2.0/customers",
         "search" : "api/2.0/search",
         "sales" : "api/2.0/sales",
-        "outlets" : "api/2.0/outlets"
+        "outlets" : "api/2.0/outlets",
+        "products" : "api/2.0/products"
     }
 
     __domain = ''
@@ -63,6 +64,8 @@ class VendApi:
     def getOutlets(self):
         return self.__getRequest__(self.__domain + self.__ENDPOINTS['outlets'])
 
+    def getProducts(self):
+        return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'])
 
     def __getSearch__(self, url, type='', deleted='false', offset='', pageSize='10000'):
         """

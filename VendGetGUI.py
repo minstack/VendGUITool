@@ -166,10 +166,19 @@ class VendGetGUI:
         self.root.update()
 
     def getDateFrom(self):
-        return self.txtDateFrom.get()
+        return self.txtDateFrom.get().strip()
 
     def getDateTo(self):
-        return self.txtDateTo.get()
+        return self.txtDateTo.get().strip()
+
+    def getPrefix(self):
+        return self.txtPrefix.get().strip()
+
+    def getToken(self):
+        return self.txtToken.get().strip()
+
+    def getSelectedType(self):
+        return self.entityType.get()
 
     def main(self):
         """ Main loop for this GUI. """
