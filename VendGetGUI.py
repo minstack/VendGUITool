@@ -180,6 +180,14 @@ class VendGetGUI:
     def getSelectedType(self):
         return self.entityType.get()
 
+    def setDateFrom(self, date):
+        self.txtDateFrom.delete(0,END)
+        self.txtDateFrom.insert(0,date)
+
+    def setDateTo(self, date):
+        self.txtDateTo.delete(0,END)
+        self.txtDateTo.insert(0,date)
+
     def main(self):
         """ Main loop for this GUI. """
         self.root.mainloop()
