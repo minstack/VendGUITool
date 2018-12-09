@@ -32,3 +32,6 @@ def getUtcTime(localdate, localtime, timezone):
     utc_dt = local_dt.astimezone(pytz.utc)
 
     return utc_dt.strftime(dtformat)
+
+def getToday(format):
+    return datetime.datetime.now().strftime(format)
