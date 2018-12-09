@@ -243,44 +243,15 @@ class VendBulkDeleteGUI:
 
     def setDeletingState(self):
         """ Sets all the controls to disabled state to prevent any multi-clicks"""
-        self.btnReset.config(state=DISABLED)
-        self.btnDelCust.config(state=DISABLED)
-        self.btnOpenCsvDialog.config(state=DISABLED)
-        self.btnDeleteFile.config(state=DISABLED)
-        self.txtToken.config(state=DISABLED)
-        self.txtPrefix.config(state=DISABLED)
-        self.chkPaConfirm.config(state=DISABLED)
-        self.chkTokenExpiry.config(state=DISABLED)
+        ControlUtil.setControlState(self.TEXT_BOXES, DISABLED)
+        ControlUtil.setControlState(self.BUTTONS, DISABLED)
         self.root.update()
 
     def setReadyState(self):
         """ Resets all controls back to normal state."""
-        self.btnReset.config(state=NORMAL)
-        self.btnDelCust.config(state=NORMAL)
-        self.btnOpenCsvDialog.config(state=NORMAL)
-        self.btnDeleteFile.config(state=NORMAL)
-        self.txtToken.config(state=NORMAL)
-        self.txtPrefix.config(state=NORMAL)
-        self.chkPaConfirm.config(state=NORMAL)
-        self.chkTokenExpiry.config(state=NORMAL)
+        ControlUtil.setControlState(self.TEXT_BOXES, NORMAL)
+        ControlUtil.setControlState(self.BUTTONS, NORMAL)
         self.root.update()
-
-    def setDeletingState(self):
-        """ Sets all the controls to disabled state to prevent any multi-clicks"""
-        self.__setControlState(self.TEXT_BOXES, DISABLED)
-        self.__setControlState(self.BUTTONS, DISABLED)
-        self.root.update()
-
-    def setReadyState(self):
-        """ Resets all controls back to normal state."""
-
-        self.__setControlState(self.TEXT_BOXES, NORMAL)
-        self.__setControlState(self.BUTTONS, NORMAL)
-        self.root.update()
-
-    def __setControlState(self, controls, state):
-        for c in controls:
-            c.config(state=state)
 
     def main(self):
         """ Main loop for this GUI. """
