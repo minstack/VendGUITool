@@ -14,7 +14,7 @@ def retrieveToDelete(kwargs):
 
 
 if __name__ == '__main__':
-    tabTitles = ["Bulk Delete", "Retrieve"]
+    tabTitles = ["Bulk Delete", "Filtered Retrieve"]
     mainGui = VendGUIToolGui(tabTitles)
 
     global bulkDelGui

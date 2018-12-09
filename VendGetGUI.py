@@ -29,7 +29,7 @@ class VendGetGUI:
         #self.root.resizable(0,0)
             self.root.title("Vend Retrieve")
             self.root.pack_propagate(0)
-        header = Label(self.root, text="Retrieve", bd=1, font="San-Serif 18 bold", bg="#41B04B", fg="white")
+        header = Label(self.root, text="Filtered Retrieve", bd=1, font="San-Serif 18 bold", bg="#41B04B", fg="white")
         header.pack(side=TOP, anchor=W, fill=X)
 
         # container for the main widgets
@@ -98,7 +98,17 @@ class VendGetGUI:
         temp.pack(anchor=W, pady=5)
 
         radioFrame.grid(row=0, column=3, rowspan=4, padx=20, sticky=N)
-        ControlUtil.addControl(self.BUTTONS, self.btnExport, self.btnReset)
+
+        self.btnToday = Button(mainFrame, text="Today", font="Helvetica 14", command=self.__setToday)
+        self.btnToday.grid(row=3, column=2, rowspan=2, sticky=N+E+S+W, pady=7)
+
+        ControlUtil.addControl(self.BUTTONS, self.btnExport, self.btnReset, self.btnToday)
+
+    def __setToday(self):
+        today = ControlUtil.getToday("%Y-%m-%d")
+
+        self.setDateFrom(today)
+        self.setDateTo(today)
 
     def __switchEntityType(self):
         self.btnExport.config(text="Export {0}".format(self.entityType.get()))
@@ -158,8 +168,6 @@ class VendGetGUI:
 
     def setRunningState(self):
         """ Sets all the controls to disabled state to prevent any multi-clicks"""
-        #self.__setControlState(self.TEXT_BOXES, DISABLED)
-        #self.__setControlState(self.BUTTONS, DISABLED)
         ControlUtil.setControlState(self.TEXT_BOXES, DISABLED)
         ControlUtil.setControlState(self.BUTTONS, DISABLED)
         self.root.update()
