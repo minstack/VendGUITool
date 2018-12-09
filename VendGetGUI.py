@@ -88,17 +88,20 @@ class VendGetGUI:
 
         Label(radioFrame, text='Type', font="Helvetica 16 bold").pack()
 
-        custRadio = Radiobutton(radioFrame, text="Customers", variable=self.entityType, value='customers', font="Helvetica 14")
+        custRadio = Radiobutton(radioFrame, text="Customers", variable=self.entityType, value='Customers', font="Helvetica 14", command=self.__switchEntityType)
         custRadio.invoke()
         custRadio.pack(anchor=W, pady=5)
-        Radiobutton(radioFrame, text="Products", variable=self.entityType, value='products', font="Helvetica 14").pack(anchor=W, pady=5)
+        Radiobutton(radioFrame, text="Products", variable=self.entityType, value='Products', font="Helvetica 14", command=self.__switchEntityType).pack(anchor=W, pady=5)
 
-        temp = Radiobutton(radioFrame, text="Sales", variable=self.entityType, value='sales', font="Helvetica 14")
+        temp = Radiobutton(radioFrame, text="Sales", variable=self.entityType, value='Sales', font="Helvetica 14", command=self.__switchEntityType)
         temp.configure(state=DISABLED)
         temp.pack(anchor=W, pady=5)
 
         radioFrame.grid(row=0, column=3, rowspan=4, padx=20, sticky=N)
         ControlUtil.addControl(self.BUTTONS, self.btnExport, self.btnReset)
+
+    def __switchEntityType(self):
+        self.btnExport.config(text="Export {0}".format(self.entityType.get()))
 
     def __loadMessageControls__(self, mainFrame):
         """

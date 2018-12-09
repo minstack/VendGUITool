@@ -11,6 +11,7 @@ import os
 
 gui = None
 api = None
+retrieveFilepath = ""
 
 def startProcess(bulkDelGui):
     """
@@ -39,11 +40,19 @@ def startProcess(bulkDelGui):
             gui.setReadyState()
             return
 
+    selectedFunc = {
+        "Customers" : processCustomers,
+        "Products" : processProducts
+    }
+
     global api
     try:
         api = VendApi(gui.txtPrefix.get().strip(), gui.txtToken.get().strip())
 
-        processCustomers(api)
+        selected = gui.getSelectedType()
+
+        selectedFunc[selected](api)
+        #processCustomers(api)
     except Exception:
        gui.setResult("Something went terribly wrong. Please contact support.\n{0}".format(traceback.format_exc()))
 
@@ -58,6 +67,9 @@ def startProcess(bulkDelGui):
 
 
     #print(api.getCustomers())
+
+def processProducts(api):
+    return
 
 def processCustomers(api):
     """

@@ -76,7 +76,7 @@ class VendBulkDeleteGUI:
         radioFrame.grid(row=4, column=1)
 
         self.entityType = StringVar()
-        custRadio = Radiobutton(radioFrame, text="Customer", value='Customers', variable=self.entityType, command=self.__switchEntityType)
+        custRadio = Radiobutton(radioFrame, text="Customers", value='Customers', variable=self.entityType, command=self.__switchEntityType)
         custRadio.invoke()
         custRadio.pack(side=LEFT)
         temp = Radiobutton(radioFrame, text="Products", value='Products', variable=self.entityType, command=self.__switchEntityType)
@@ -203,7 +203,7 @@ class VendBulkDeleteGUI:
         filepath = askopenfilename(parent=self.root)
 
         if filepath:
-            addCsvFile(filepath.split('/'[-1]), filepath)
+            self.addCsvFile(filepath.split('/')[-1], filepath)
 
     def disableCsvButtons(self):
         ControlUtil.setControlState([self.btnOpenCsvDialog, self.btnDeleteFile], DISABLED)
@@ -237,6 +237,9 @@ class VendBulkDeleteGUI:
     def setResult(self, msg):
         """ Sets the result variable to the given string. """
         self.resultText.set(msg)
+
+    def getSelectedType(self):
+        return self.entityType.get()
 
     def setDeletingState(self):
         """ Sets all the controls to disabled state to prevent any multi-clicks"""
