@@ -6,6 +6,9 @@ import VendBulkDelete as BulkDel
 from datetime import datetime as dt
 
 
+def retrieveToDelete(kwargs):
+    kwargs['gui'] = bulkDelGui
+    BulkDel.deleteFromRetrieve(kwargs=kwargs)
 
 
 
@@ -13,8 +16,14 @@ from datetime import datetime as dt
 if __name__ == '__main__':
     tabTitles = ["Bulk Delete", "Retrieve"]
     mainGui = VendGUIToolGui(tabTitles)
+
+    global bulkDelGui
     bulkDelGui = VendBulkDeleteGUI(BulkDel.startProcess, mainGui.tabs[tabTitles[0]])
-    getGui = VendGetGUI(VendGet.start, mainGui.tabs[tabTitles[1]])
+
+    global getGui
+    getGui = VendGetGUI(VendGet.startRetrieve, retrieveToDelete, mainGui.tabs[tabTitles[1]])
+
+    #VendBulkDeleteGUI.gui = bulkDelGui
 
     dtformat = "%Y-%m-%d"
     now = dt.strftime(dt.now(), dtformat)

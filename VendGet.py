@@ -4,13 +4,13 @@ import re
 from VendGetGUI import *
 import CsvUtil
 from datetime import datetime as dt
-import expanduser
+from os.path import expanduser
 
 api = None
 START_DAY_TIME = "00:00"
 END_DAY_TIME = "23:59"
 
-def start(getGui, callback=None):
+def startRetrieve(getGui, callback=None):
 
     global gui
     gui = getGui
@@ -66,7 +66,7 @@ def start(getGui, callback=None):
     listToWrite = getColumnList(vendObjs, currCsvHeader)
     gui.setStatus("Exporting temp CSV for bulk delete...")
     filepath = exportToCsv(listToWrite, currCsvHeader, objType)
-    filename = filepath.split('/')[-1:]
+    filename = filepath.split('/')[-1]
 
     msg = "Exported {0} {1} to {2}\ntemporarily to desktop.\n\n".format(len(vendObjs), objType, filename)
     msg += "You can now go to Bulk Delete tab to delete."
@@ -75,13 +75,13 @@ def start(getGui, callback=None):
     gui.setReadyState()
 
     if callback:
-        kargs = {
-            "prefix" : gui.getPrefix(),
-            "token" : gui.getToken(),
-            "filepath" : filepath,
-            "filename" : filename
-        }
-        callback(kargs)
+        kargs = {}
+        kargs['prefix'] = gui.getPrefix()
+        kargs['token'] = gui.getToken()
+        kargs['filepath'] = filepath
+        kargs['filename'] = filename
+
+        callback(kwargs=kargs)
 
 def exportToCsv(list, header, type):
     return CsvUtil.writeListToCSV(list, header, type, "")

@@ -8,7 +8,7 @@ import tkinter
 import CsvUtil
 import traceback
 
-#gui = None
+gui = None
 api = None
 
 def startProcess(bulkDelGui):
@@ -229,13 +229,13 @@ def writeCustomersToCSV(custList):
     """ Returns the exported CSV filename of the provided customers """
     filepath = CsvUtil.writeListToCSV(custList, "customer_code", "failed_customers", api.getPrefix())
 
-    return filepath.split('/')[-1:]
+    return filepath.split('/')[-1]
 
 def writeOpenSalesToCsv(salesList):
     """ Returns the exported CSV filename of the provided sales """
     filepath = CsvUtil.writeListToCSV(salesList, "invoice_number", "open_sales", api.getPrefix())
 
-    return filepath.split('/')[-1:]
+    return filepath.split('/')[-1]
 
 def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
     """
@@ -286,9 +286,13 @@ def getCustCodeToId(customers):
 
     return codeToId
 
-
+def deleteFromRetrieve(kwargs):
+    global gui
+    gui = kwargs['gui']
+    gui.setPrefix(kwargs['prefix'])
+    gui.setToken(kwargs['token'])
+    gui.addCsvFile(kwargs['filename'], kwargs['filepath'])
 
 
 if __name__ == "__main__":
-
-    open()
+    gui = VendBulkDeleteGUI(callback=startProcess)

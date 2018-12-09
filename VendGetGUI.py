@@ -6,7 +6,7 @@ import ControlUtil
 
 class VendGetGUI:
 
-    def __init__(self,  callback=None, root=None):
+    def __init__(self,  callback=None, mainCallback=None, root=None):
         """
             Constructor for the GUI. The delete function passed is the entry
             function in the calling class/module to bind to the delete button.
@@ -14,6 +14,8 @@ class VendGetGUI:
 
         if callback:
             self.callback = callback
+        if mainCallback:
+            self.mainCallback = mainCallback
 
         self.TEXT_BOXES = []
         self.BUTTONS = []
@@ -137,7 +139,8 @@ class VendGetGUI:
         """
         self.setStatus("")
         self.setRunningState()
-        thr = threading.Thread(target=self.callback, args=([self]), kwargs={})
+
+        thr = threading.Thread(target=self.callback, args=([self, self.mainCallback]), kwargs={})
 
         thr.start()
         #self.setReadyState()

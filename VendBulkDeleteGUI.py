@@ -203,19 +203,29 @@ class VendBulkDeleteGUI:
         filepath = askopenfilename(parent=self.root)
 
         if filepath:
-            tempArr = filepath.split("/")
+            addCsvFile(filepath.split('/'[-1]), filepath)
 
-            filename = tempArr[len(tempArr)-1]
+    def addCsvFile(self, filename, filepath):
+        #tempArr = filepath.split("/")
 
-            if self.csvFileDict.get(filename, None) is not None:
-                self.setStatus("{0} has been added already.".format(filename))
-                return
+        #filename = tempArr[len(tempArr)-1]
 
-            self.csvFileDict[filename] = filepath
-            self.csvList.append(filename)
+        if self.csvFileDict.get(filename, None) is not None:
+            self.setStatus("{0} has been added already.".format(filename))
+            return
 
-            self.csvListbox.insert(END, filename)
+        self.csvFileDict[filename] = filepath
+        self.csvList.append(filename)
 
+        self.csvListbox.insert(END, filename)
+
+    def setPrefix(self, prefix):
+        self.txtPrefix.delete(0, END)
+        self.txtPrefix.insert(0, prefix)
+
+    def setToken(self, token):
+        self.txtToken.delete(0, END)
+        self.txtToken.insert(0, token)
 
     def setStatus(self, msg):
         """ Sets the status message to the provided string. """
