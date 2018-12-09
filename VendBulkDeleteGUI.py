@@ -205,6 +205,9 @@ class VendBulkDeleteGUI:
         if filepath:
             addCsvFile(filepath.split('/'[-1]), filepath)
 
+    def disableCsvButtons(self):
+        ControlUtil.setControlState([self.btnOpenCsvDialog, self.btnDeleteFile], DISABLED)
+
     def addCsvFile(self, filename, filepath):
         #tempArr = filepath.split("/")
 

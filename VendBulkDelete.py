@@ -7,6 +7,7 @@ import queue
 import tkinter
 import CsvUtil
 import traceback
+import os
 
 gui = None
 api = None
@@ -46,6 +47,14 @@ def startProcess(bulkDelGui):
     except Exception:
        gui.setResult("Something went terribly wrong. Please contact support.\n{0}".format(traceback.format_exc()))
 
+    global retrieveFilepath
+    if retrieveFilepath:
+        try:
+            os.remove(retrieveFilepath)
+            gui.setStatus("Deleted {0}...Done".format(retrieveFilepath))
+
+        except OSError:
+            pass
 
 
     #print(api.getCustomers())
@@ -172,6 +181,8 @@ def setResultMessage(result, resultCsv):
     gui.setResult(msg)
     gui.btnReset.config(state=NORMAL)
     gui.setStatus("Done...")
+
+
     #print(msg)
 
     #reset gui, status etc.
@@ -293,6 +304,10 @@ def deleteFromRetrieve(kwargs):
     gui.setToken(kwargs['token'])
     gui.addCsvFile(kwargs['filename'], kwargs['filepath'])
 
+    gui.disableCsvButtons()
+
+    global retrieveFilepath
+    retrieveFilepath = kwargs['filepath']
 
 if __name__ == "__main__":
     gui = VendBulkDeleteGUI(callback=startProcess)
