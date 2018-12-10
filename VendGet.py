@@ -57,8 +57,8 @@ def startRetrieve(getGui, callback=None):
     gui.setStatus("Retrieved {0} {1}...".format(len(vendObjs), objType))
 
     objColHeader = {
-        "products" : "id",
-        "customers" : "customer_code"
+        "Products" : "id",
+        "Customers" : "customer_code"
     }
 
     currCsvHeader = objColHeader[objType]
@@ -96,8 +96,8 @@ def getColumnList(objs, header):
 
 def getVendObjects(api, utcDateFrom, utcDateTo, entityType):
     endpointCall = {
-        "customers" : api.getCustomers,
-        "products" : api.getProducts
+        "Customers" : api.getCustomers,
+        "Products" : api.getProducts
     }
 
     objects = endpointCall[entityType]()
