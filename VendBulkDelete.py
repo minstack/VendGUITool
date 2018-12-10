@@ -12,6 +12,7 @@ import os
 gui = None
 api = None
 retrieveFilepath = ""
+THREAD_COUNT = 8
 
 def startProcess(bulkDelGui):
     """
@@ -56,12 +57,13 @@ def startProcess(bulkDelGui):
     except Exception:
        gui.setResult("Something went terribly wrong. Please contact support.\n{0}".format(traceback.format_exc()))
 
+    # only runs if the bulk delete tab has been modified by retrieve tab
+    # for convenience of user
     global retrieveFilepath
     if retrieveFilepath:
         try:
             os.remove(retrieveFilepath)
             gui.setStatus("Deleted {0}...Done".format(retrieveFilepath))
-
         except OSError:
             pass
 
@@ -69,7 +71,42 @@ def startProcess(bulkDelGui):
     #print(api.getCustomers())
 
 def processProducts(api):
-    return
+
+    filenames = gui.csvList
+
+    prodIdsToDelete = []
+    for file in filenames:
+        prodIdsToDelete.extend(CsvUtil.getColumn(file, "id"))
+
+    if len(prodIdsToDelete) == 0:
+        gui.setStatus("Please make sure CSV has 'id' column...")
+        gui.setReadyState()
+        return
+
+    sublists = getSubLists(prodIdsToDelete, THREAD_COUNT)
+
+    outQueue = queue.Queue()
+    threads = []
+
+    for sublist in sublists:
+        tempThread = threading.Thread(target=deleteProducts, args=(subarr,numProdsToDelete, api,outQueue,))
+        threads.append(tempThread)
+        tempThread.start()
+
+    for thread in threads:
+        thread.join()
+
+    # get results of the
+
+def deleteProducts(subarr, numProdsToDelete, api, outQueue):
+
+    global prodDelCount
+    prodDelCount = 0
+
+    for prod in subarr:
+        #delete Product
+        return
+    return None
 
 def processCustomers(api):
     """
@@ -106,7 +143,7 @@ def processCustomers(api):
 
     gui.setStatus("Found {0} customers to delete...".format(numCustToDelete))
 
-    subArrs = getSubLists(custCodeToDelete, 8)
+    subArrs = getSubLists(custCodeToDelete, THREAD_COUNT)
 
     #print(len(subArrs))
     #time.sleep(60)
