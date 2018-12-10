@@ -42,6 +42,9 @@ class VendApi:
         """
         return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['cust'], id), headers=self.__headers).status_code
 
+    def deleteProduct(self, id):
+        return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['products'], id), headers=self.__headers).json()
+
     def getCustomers(self):
         """
             Returns array of customer objects of this store.
