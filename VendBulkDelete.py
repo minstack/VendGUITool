@@ -107,6 +107,19 @@ def processProducts(api):
     gui.setStatus("Exporting {0} products that failed to delete...".format(len(failedDeletes)))
     #process failed deletes, export
 
+    processFailedProducts(failedDeletes)
+
+def processFailedProducts(failedList):
+
+    ids = failedList.keys()
+    errors = []
+    details = []
+
+    for id in ids:
+        curr = failedList[id]
+        errors.append(curr['error'])
+        details.append(curr['details'])
+
     
 
 def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
