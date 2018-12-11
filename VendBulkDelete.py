@@ -107,20 +107,34 @@ def processProducts(api):
     gui.setStatus("Exporting {0} products that failed to delete...".format(len(failedDeletes)))
     #process failed deletes, export
 
-    processFailedProducts(failedDeletes)
+    failedCsvPath = processFailedProducts(failedDeletes)
+
+    filename = failedCsvPath.split('/')[-1]
+
+    gui.setResult("Successfully deleted {0} products.\n".format(len(successfulProds)))
+    gui.setResult("Exported failed products to {0} to desktop.\n".format(filename))
+
+    gui.setStatus("Done...")
+
 
 def processFailedProducts(failedList):
 
     ids = failedList.keys()
-    errors = []
-    details = []
+    ids.insert(0, "id")
+    errors = ["Error"]
+    details = ["Details"]
 
     for id in ids:
         curr = failedList[id]
         errors.append(curr['error'])
         details.append(curr['details'])
 
+    zipped = zip(ids, errors, details)
 
+
+    filepath = CsvUtil.writeListToCSV(zipped, "", "failed_products", gui.getPrefix())
+
+    return filepath
 
 def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
 
@@ -131,21 +145,11 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
         3 : {}
     }
 
-    responses = {
-        1 : [],
-        3 : []
-    }
-
-    prodIds = {
-        1 : [],
-        3 : []
-    }
-
     for prod in subarr:
         #delete Product
         r = api.deleteProduct(prod)
-        responses[len(r)][prod] = r
-        resutls[len(r)] = prod
+        #responses[len(r)][prod] = r
+        result[len(r)][prod] = r
 
         if len(r) == 1:
             prodDelCount += 1
