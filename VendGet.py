@@ -80,7 +80,7 @@ def startRetrieve(getGui, callback=None):
             'token' : gui.getToken(),
             'filepath' : filepath,
             'filename' : filename,
-            'entity' : entityType
+            'entity' : objType
         }
 
         callback(kwargs=kargs)
