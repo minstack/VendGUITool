@@ -96,6 +96,10 @@ def processProducts(api):
     for thread in threads:
         thread.join()
 
+    results = []
+
+
+
     # get results of the
 
 def deleteProducts(subarr, numProdsToDelete, api, outQueue):
@@ -103,10 +107,24 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue):
     global prodDelCount
     prodDelCount = 0
 
+    responses = {
+        1 : [],
+        3 : []
+    }
+
+    prodIds = {
+        1 : [],
+        3 : []
+    }
+
     for prod in subarr:
         #delete Product
-        return
-    return None
+        rBody = api.deleteProduct(prod)
+
+        reponses[len(rBody)].append(rBody)
+        prodIds[len(rBody)].append(prod)
+
+
 
 def processCustomers(api):
     """
@@ -352,6 +370,10 @@ def deleteFromRetrieve(kwargs):
     gui.setPrefix(kwargs['prefix'])
     gui.setToken(kwargs['token'])
     gui.addCsvFile(kwargs['filename'], kwargs['filepath'])
+
+    entityType = kwargs['entity']
+
+    gui.setEntityType(entityType)
 
     gui.disableCsvButtons()
 
