@@ -75,11 +75,13 @@ def startRetrieve(getGui, callback=None):
     gui.setReadyState()
 
     if callback:
-        kargs = {}
-        kargs['prefix'] = gui.getPrefix()
-        kargs['token'] = gui.getToken()
-        kargs['filepath'] = filepath
-        kargs['filename'] = filename
+        kargs = {
+            'prefix' : gui.getPrefix(),
+            'token' : gui.getToken(),
+            'filepath' : filepath,
+            'filename' : filename,
+            'entity' : entityType
+        }
 
         callback(kwargs=kargs)
 
