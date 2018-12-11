@@ -111,8 +111,10 @@ def processProducts(api):
 
     filename = failedCsvPath.split('/')[-1]
 
-    gui.setResult("Successfully deleted {0} products.\n".format(len(successfulProds)))
-    gui.setResult("Exported failed products to {0} to desktop.\n".format(filename))
+    resultMsg = "Successfully deleted {0} products.\n".format(len(successfulProds))
+    resultMsg += "Exported failed products to {0} to desktop.\n".format(filename)
+
+    gui.setResult(resultMsg)
 
     gui.setStatus("Done...")
 
