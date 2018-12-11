@@ -79,7 +79,7 @@ def processProducts(api):
         prodIdsToDelete.extend(CsvUtil.getColumn(file, "id"))
 
     if len(prodIdsToDelete) == 0:
-        gui.setStatus("Please make sure CSV has 'id' column...")
+        gui.setStatus("Please make sure CSV has an 'id' column...")
         gui.setReadyState()
         return
 
@@ -96,17 +96,45 @@ def processProducts(api):
     for thread in threads:
         thread.join()
 
-    # get results of the
+    failedDeletes = {}
+    successfulProds = {}
 
-def deleteProducts(subarr, numProdsToDelete, api, outQueue):
+    for thread in threads:
+        result = outQueue.get()
+        successfulProds.update(result[1])
+        failedDeletes.update(result[3])
+
+    gui.setStatus("Exporting {0} products that failed to delete...".format(len(failedDeletes)))
+    #process failed deletes, export
+
+    
+
+def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
 
     global prodDelCount
     prodDelCount = 0
+    result = {
+        1 : {},
+        3 : {}
+    }
 
     for prod in subarr:
         #delete Product
+        r = api.deleteProduct(prod)
+        responses[len(r)][prod] = r
+        resutls[len(r)] = prod
+
+        if len(r) == 1:
+            prodDelCount += 1
+
+        gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
+
+
+    if outQueue:
+        outQueue.put(result)
         return
-    return None
+
+    return result
 
 def processCustomers(api):
     """
@@ -231,10 +259,6 @@ def setResultMessage(result, resultCsv):
     gui.btnReset.config(state=NORMAL)
     gui.setStatus("Done...")
 
-
-    #print(msg)
-
-    #reset gui, status etc.
 
 def processFailedCustomers(failedCustomers, codeToId):
     """
