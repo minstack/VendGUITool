@@ -79,9 +79,14 @@ class VendBulkDeleteGUI:
         custRadio = Radiobutton(radioFrame, text="Customers", value='Customers', variable=self.entityType, command=self.__switchEntityType)
         custRadio.invoke()
         custRadio.pack(side=LEFT)
-        temp = Radiobutton(radioFrame, text="Products", value='Products', variable=self.entityType, command=self.__switchEntityType)
-        temp.configure(state=DISABLED)
-        temp.pack()
+        prodRadio = Radiobutton(radioFrame, text="Products", value='Products', variable=self.entityType, command=self.__switchEntityType)
+        #prodRadio.configure(state=DISABLED)
+        prodRadio.pack()
+
+        self.entityToRadio = {
+            'Customers' : custRadio,
+            'Products' : prodRadio
+        }
 
         ControlUtil.addControl(self.BUTTONS, self.btnDelCust, self.btnReset)
 
@@ -171,6 +176,10 @@ class VendBulkDeleteGUI:
             self.csvListbox.delete(selected[0])
             self.csvFileDict.pop(self.csvList[selected[0]], None)
             del self.csvList[selected[0]]
+    def setEntityType(self, entity):
+        radio = self.entityToRadio[entity]
+
+        radio.invoke()
 
     def entriesHaveValues(self):
         """
