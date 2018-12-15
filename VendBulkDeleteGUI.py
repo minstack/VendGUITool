@@ -190,7 +190,7 @@ class VendBulkDeleteGUI:
 
     def getFilePath(self, filename):
         return self.csvFileDict.get(filename, None)
-        
+
     def startThread(self):
         """
             Main function to start the thread to the provided function of the
@@ -238,6 +238,9 @@ class VendBulkDeleteGUI:
         self.txtPrefix.delete(0, END)
         self.txtPrefix.insert(0, prefix)
 
+    def getPrefix(self):
+        return self.txtPrefix.get()
+
     def setToken(self, token):
         self.txtToken.delete(0, END)
         self.txtToken.insert(0, token)
@@ -249,6 +252,7 @@ class VendBulkDeleteGUI:
     def setResult(self, msg):
         """ Sets the result variable to the given string. """
         self.resultText.set(msg)
+        self.btnReset.config(state=NORMAL)
 
     def getSelectedType(self):
         return self.entityType.get()
