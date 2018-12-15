@@ -188,6 +188,9 @@ class VendBulkDeleteGUI:
         """
         return ControlUtil.entriesHaveValues(self.TEXT_BOXES) and (len(self.csvList) > 0)
 
+    def getFilePath(self, filename):
+        return self.csvFileDict.get(filename, None)
+        
     def startThread(self):
         """
             Main function to start the thread to the provided function of the
