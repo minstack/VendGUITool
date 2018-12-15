@@ -76,9 +76,14 @@ def processProducts(api):
 
     prodIdsToDelete = []
     for file in filenames:
-        prodIdsToDelete.extend(CsvUtil.getColumn(file, "id"))
+        filepath = gui.getFilePath(file)
 
-    if len(prodIdsToDelete) == 0:
+        if (filepath):
+            prodIdsToDelete.extend(CsvUtil.getColumn(filepath, "id"))
+
+    numProdsToDelete = len(prodIdsToDelete)
+
+    if numProdsToDelete == 0:
         gui.setStatus("Please make sure CSV has an 'id' column...")
         gui.setReadyState()
         return
@@ -89,7 +94,7 @@ def processProducts(api):
     threads = []
 
     for sublist in sublists:
-        tempThread = threading.Thread(target=deleteProducts, args=(subarr,numProdsToDelete, api,outQueue,))
+        tempThread = threading.Thread(target=deleteProducts, args=(sublist,numProdsToDelete, api,outQueue,))
         threads.append(tempThread)
         tempThread.start()
 
@@ -104,25 +109,23 @@ def processProducts(api):
         successfulProds.update(result[1])
         failedDeletes.update(result[3])
 
-    gui.setStatus("Exporting {0} products that failed to delete...".format(len(failedDeletes)))
-    #process failed deletes, export
-
-    failedCsvPath = processFailedProducts(failedDeletes)
-
-    filename = failedCsvPath.split('/')[-1]
-
     resultMsg = "Successfully deleted {0} products.\n".format(len(successfulProds))
-    resultMsg += "Exported failed products to {0} to desktop.\n".format(filename)
+
+    #process failed deletes, export
+    if len(failedDeletes) > 0 :
+        gui.setStatus("Exporting {0} products that failed to delete...".format(len(failedDeletes)))
+        failedCsvPath = processFailedProducts(failedDeletes)
+        filename = failedCsvPath.split('/')[-1]
+        resultMsg += "Exported failed products to {0} to desktop.\n".format(filename)
 
     gui.setResult(resultMsg)
-
     gui.setStatus("Done...")
+
 
 
 def processFailedProducts(failedList):
 
-    ids = failedList.keys()
-    ids.insert(0, "id")
+    ids = list(failedList.keys())
     errors = ["Error"]
     details = ["Details"]
 
@@ -131,6 +134,7 @@ def processFailedProducts(failedList):
         errors.append(curr['error'])
         details.append(curr['details'])
 
+    ids.insert(0, "id")
     zipped = zip(ids, errors, details)
 
 
@@ -150,7 +154,6 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
     for prod in subarr:
         #delete Product
         r = api.deleteProduct(prod)
-        #responses[len(r)][prod] = r
         result[len(r)][prod] = r
 
         if len(r) == 1:
@@ -285,7 +288,6 @@ def setResultMessage(result, resultCsv):
         msg += "Saved {0} to desktop.".format(openSalesCsv)
 
     gui.setResult(msg)
-    gui.btnReset.config(state=NORMAL)
     gui.setStatus("Done...")
 
 
