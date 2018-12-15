@@ -18,14 +18,21 @@ def getColumn(csvFile, colName):
                                      # based on column name k
     return columns[colName]
 
-def writeListToCSV(list, colHeader, title, prefix):
+def writeListToCSV(output, colHeader, title, prefix):
     """
         Exports the provided array into a column with the provided column header
         as a CSV file with specified title as suffix to filename.
         Filename format: [prefix][datetime][title].csv
     """
     if colHeader:
-        list.insert(0, colHeader)
+        output.insert(0, colHeader)
+
+    rows = output
+
+    #output can be a list or zipped tuples
+    #lists need to be zipped for following write to work
+    if isinstance(output, list):
+        rows = zip(output)
 
     filename = prefix + dt.datetime.now().strftime("%Y-%m-%dT%H:%M") + title + ".csv"
 
@@ -35,9 +42,9 @@ def writeListToCSV(list, colHeader, title, prefix):
     filepath = desktop + filename
 
     with open(filepath, "w", newline='', encoding='utf-8') as file:
-        writer = csv.writer(file, delimiter=',', quotechar='"',quoting=csv.QUOTE_ALL)
-        for row in list:
-            writer.writerow([row])
+        writer = csv.writer(file, delimiter=',', quotechar='"')
+        for row in rows:
+            writer.writerow(row)
 
     #gui.setStatus("Write {0} completed...".format(filename))
 
