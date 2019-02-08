@@ -8,11 +8,12 @@ import tkinter
 import CsvUtil
 import traceback
 import os
+import time
 
 gui = None
 api = None
 retrieveFilepath = ""
-THREAD_COUNT = 8
+THREAD_COUNT = 1
 
 def startProcess(bulkDelGui):
     """
@@ -70,6 +71,23 @@ def startProcess(bulkDelGui):
 
     #print(api.getCustomers())
 
+def getThreadCount(api, deleteCount):
+
+    numRegisters = len(api.getRegisters()['data'])
+    threads = 1
+
+    if numRegisters > 6:
+        threads = 6
+    else:
+        threads = numRegisters
+
+    if deleteCount < 350:
+        threads = 1
+
+    print(threads)
+
+    return threads
+
 def processProducts(api):
 
     filenames = gui.csvList
@@ -87,6 +105,8 @@ def processProducts(api):
         gui.setStatus("Please make sure CSV has an 'id' column...")
         gui.setReadyState()
         return
+
+    THREAD_COUNT = getThreadCount(api, numProdsToDelete)
 
     sublists = getSubLists(prodIdsToDelete, THREAD_COUNT)
 
@@ -120,8 +140,6 @@ def processProducts(api):
 
     gui.setResult(resultMsg)
     gui.setStatus("Done...")
-
-
 
 def processFailedProducts(failedList):
 
@@ -158,6 +176,8 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
 
         if len(r) == 1:
             prodDelCount += 1
+        else:
+            print(r)
 
         gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
 
@@ -203,6 +223,8 @@ def processCustomers(api):
 
     gui.setStatus("Found {0} customers to delete...".format(numCustToDelete))
 
+    THREAD_COUNT = getThreadCount(api, numCustToDelete)
+
     subArrs = getSubLists(custCodeToDelete, THREAD_COUNT)
 
     #print(len(subArrs))
@@ -223,18 +245,21 @@ def processCustomers(api):
     result ={
         204: [],
         500: [],
-        404: []
+        404: [],
+        429: [],
     }
 
     for thread in threads:
         results.append(outQueue.get())
 
-    status_codes = [204,500,404]
+    status_codes = [204,500,404,429]
 
     for r in results:
         result[status_codes[0]].extend(r[status_codes[0]])
         result[status_codes[1]].extend(r[status_codes[1]])
         result[status_codes[2]].extend(r[status_codes[2]])
+        result[status_codes[3]].extend(r[status_codes[3]])
+
 
     gui.setStatus("Successfully deleted {0} customers...".format(len(result[204])))
 
@@ -362,12 +387,38 @@ def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
     resultDict = {
         500: [],
         404: [],
-        204: []
+        204: [],
+        429: []
     }
 
     global deletedCust
     deletedCust = 0
-    #print(codeToId)
+
+    while len(custCodeToDelete) > 0:
+        currCode = custCodeToDelete.pop()
+        currId = codeToId.get(str(currCode), None)
+
+        if currId is None:
+            continue
+
+        response = api.deleteCustomer(currId)
+        print(response)
+        #rate limited put the code back so we still have the left over code list
+        if response == 429:
+            print("429")
+            custCodeToDelete.append(currCode)
+            resultDict[response] = custCodeToDelete
+            gui.setStatus("Rate limited: will retry in a minute...")
+            time.sleep(90)
+
+            #break;
+
+        resultDict[response].append(currCode)
+        gui.setStatus("Deleting customer {0} out of {1}".format(deletedCust, totalCust))
+
+        if response == 204:
+            deletedCust += 1 #only count successful deletes
+    '''
     for code in custCodeToDelete:
         codeToDel = codeToId.get(str(code), None)
         if codeToDel is None:
@@ -379,7 +430,7 @@ def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
         gui.setStatus("Deleting customer {0} out of {1}".format(deletedCust, totalCust))
 
         if response == 204:
-            deletedCust += 1 #only count successful deletes
+            deletedCust += 1 #only count successful deletes'''
 
     #gui.setStatus("Successfully deleted {0} customers...".format())
     if outQueue:
