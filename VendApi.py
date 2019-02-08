@@ -16,7 +16,8 @@ class VendApi:
         "sales" : "api/2.0/sales",
         "outlets" : "api/2.0/outlets",
         "products" : "api/2.0/products",
-        "delProd" : "api/products"
+        "delProd" : "api/products",
+        "registers" : "api/2.0/registers"
     }
 
     __domain = ''
@@ -46,6 +47,12 @@ class VendApi:
     def deleteProduct(self, id):
         return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['delProd'], id), headers=self.__headers).json()
 
+    def getRegisters(self):
+        response = requests.request("GET", '{0}/{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"), headers=self.__headers)
+        print(response)
+        print('{0}/{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"))
+        return requests.request("GET", '{0}{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"), headers=self.__headers).json()
+
     def getCustomers(self):
         """
             Returns array of customer objects of this store.
@@ -57,6 +64,7 @@ class VendApi:
         """
             Returns array of on-account sales for this store.
         """
+
         return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'] + '?type=sales&status=onaccount')
 
     def getLaybySales(self):
@@ -82,17 +90,22 @@ class VendApi:
         endpoint = search.format(url, type, deleted, pageSize, offset)
         response = requests.request("GET", endpoint, headers = self.__headers)
 
+        print(search.format(url, type, deleted, pageSize, offset))
+
         if response.status_code != 200:
             return None
 
         data = []
         tempJson = response.json()['data']
-        offset = '10000'
+        offset = 0
 
         while len(tempJson) > 0:
             data.extend(tempJson)
+            offset += 10000
             endpoint = search.format(url, type, deleted, pageSize, offset)
             tempJson = requests.request("GET", endpoint, headers = self.__headers).json()['data']
+            print(len(tempJson))
+            print(len(data))
 
         return data
 
