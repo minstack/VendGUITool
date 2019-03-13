@@ -3,7 +3,7 @@ from collections import defaultdict
 import datetime as dt
 from os.path import expanduser
 
-def getColumn(csvFile, colName):
+def getColumn(csvFile, colName, inclEmpty=False):
     """
         Processes the provided CSV and retrieves and returns the column values
         of the specified column name. Taken from stack overflow.
@@ -14,6 +14,10 @@ def getColumn(csvFile, colName):
         reader = csv.DictReader(f) # read rows into a dictionary format
         for row in reader: # read a row as {column1: value1, column2: value2,...}
             for (k,v) in row.items(): # go over each column name and value
+
+                if not inclEmpty and not v:
+                    continue
+
                 columns[k].append(v) # append the value into the appropriate list
                                      # based on column name k
     return columns[colName]
