@@ -74,15 +74,13 @@ def startProcess(bulkDelGui):
 def getThreadCount(api, deleteCount):
 
     numRegisters = len(api.getRegisters()['data'])
-    threads = 1
+    threads = numRegisters - 1 #from testing registercount = threads still seem to get rate limited
+
+    if threads == 0 or deleteCount < 350:
+        threads = 1
 
     if numRegisters > 6:
         threads = 6
-    else:
-        threads = numRegisters
-
-    if deleteCount < 350:
-        threads = 1
 
     print(threads)
 
@@ -156,7 +154,7 @@ def processFailedProducts(failedList):
     zipped = zip(ids, errors, details)
 
 
-    filepath = CsvUtil.writeListToCSV(zipped, "", "failed_products", gui.getPrefix())
+    filepath = CsvUtil.writeListToCSV(output=zipped, title="failed_products", prefix=gui.getPrefix())
 
     return filepath
 
@@ -169,9 +167,19 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
         3 : {}
     }
 
-    for prod in subarr:
-        #delete Product
-        r = api.deleteProduct(prod)
+    i = 0
+    while i < numProdsToDelete:
+        currProd = subarr.pop()
+        resultObj = api.deleteProduct(currProd)
+        status = resultObj.status_code
+
+        if status == 429:
+            gui.setStatus("Rate limited: will retry in 5 minutes, you can continue to work on something else...")
+            time.sleep(300)
+            subarr.append(currProd)
+            continue
+
+        r = resultObj.json()
         result[len(r)][prod] = r
 
         if len(r) == 1:
@@ -181,7 +189,21 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
 
         gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
 
+    '''
+    for prod in subarr:
+        #delete Product
+        resultObj = api.deleteProduct(prod)
+        r = resultObj.json()
+        result[len(r)][prod] = r
 
+        if len(r) == 1:
+            prodDelCount += 1
+        else:
+            print(r)
+
+        gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
+
+    '''
     if outQueue:
         outQueue.put(result)
         return
@@ -354,6 +376,8 @@ def getOpenSaleMatch(custList, codeToId, salesList):
         tempReverse[id] = code
 
     saleInvoices = []
+    cust=[]
+
     for sale in salesList:
          custCode = tempReverse.get(sale['customer_id'], None)
 
@@ -361,19 +385,26 @@ def getOpenSaleMatch(custList, codeToId, salesList):
              continue
 
          saleInvoices.append(sale['invoice_number'])
+         cust.append(custCode)
 
-    return saleInvoices
+    return [saleInvoices, cust]
 
 
 def writeCustomersToCSV(custList):
     """ Returns the exported CSV filename of the provided customers """
-    filepath = CsvUtil.writeListToCSV(custList, "customer_code", "failed_customers", api.getPrefix())
+    filepath = CsvUtil.writeListToCSV(output=custList, colHeader="customer_code", title="failed_customers", prefix=api.getPrefix())
 
     return filepath.split('/')[-1]
 
 def writeOpenSalesToCsv(salesList):
     """ Returns the exported CSV filename of the provided sales """
-    filepath = CsvUtil.writeListToCSV(salesList, "invoice_number", "open_sales", api.getPrefix())
+    sales = salesList[0]
+    custs = salesList[1]
+
+    sales.insert(0, "invoice_number")
+    custs.insert(0, "customer_code")
+
+    filepath = CsvUtil.writeListToCSV(output=zip(sales, custs), title="open_sales", prefix=api.getPrefix())
 
     return filepath.split('/')[-1]
 
@@ -402,14 +433,14 @@ def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
             continue
 
         response = api.deleteCustomer(currId)
-        print(response)
+        #print(response)
         #rate limited put the code back so we still have the left over code list
         if response == 429:
             print("429")
             custCodeToDelete.append(currCode)
             resultDict[response] = custCodeToDelete
-            gui.setStatus("Rate limited: will retry in a minute...")
-            time.sleep(90)
+            gui.setStatus("Rate limited: will retry in 5 minutes, you can continue to work on something else...")
+            time.sleep(300)
 
             #break;
 
@@ -455,6 +486,7 @@ def getCustCodeToId(customers):
 def deleteFromRetrieve(kwargs):
     global gui
     gui = kwargs['gui']
+
     gui.setPrefix(kwargs['prefix'])
     gui.setToken(kwargs['token'])
     gui.addCsvFile(kwargs['filename'], kwargs['filepath'])
