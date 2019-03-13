@@ -91,11 +91,13 @@ class VendGetGUI:
         custRadio = Radiobutton(radioFrame, text="Customers", variable=self.entityType, value='Customers', font="Helvetica 14", command=self.__switchEntityType)
         custRadio.invoke()
         custRadio.pack(anchor=W, pady=5)
-        Radiobutton(radioFrame, text="Products", variable=self.entityType, value='Products', font="Helvetica 14", command=self.__switchEntityType).pack(anchor=W, pady=5)
+        prodRadio = Radiobutton(radioFrame, text="Products", variable=self.entityType, value='Products', font="Helvetica 14", command=self.__switchEntityType)
+        prodRadio.pack(anchor=W, pady=5)
+        #prodRadio.configure(state=DISABLED)
 
-        temp = Radiobutton(radioFrame, text="Sales", variable=self.entityType, value='Sales', font="Helvetica 14", command=self.__switchEntityType)
+        '''temp = Radiobutton(radioFrame, text="Sales", variable=self.entityType, value='Sales', font="Helvetica 14", command=self.__switchEntityType)
         temp.configure(state=DISABLED)
-        temp.pack(anchor=W, pady=5)
+        temp.pack(anchor=W, pady=5)'''
 
         radioFrame.grid(row=0, column=3, rowspan=4, padx=20, sticky=N)
 
