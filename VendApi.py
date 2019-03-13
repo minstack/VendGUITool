@@ -17,7 +17,8 @@ class VendApi:
         "outlets" : "api/2.0/outlets",
         "products" : "api/2.0/products",
         "delProd" : "api/products",
-        "registers" : "api/2.0/registers"
+        "registers" : "api/2.0/registers",
+        "stockorders" : "api/consignment"
     }
 
     __domain = ''
@@ -33,6 +34,9 @@ class VendApi:
         self.__headers["Authorization"] = "Bearer " + token
         self.__prefix = prefix
 
+    def deleteStockOrder(self, id):
+        return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['stockorders'], id), headers=self.__headers)
+
     def deleteCustomer(self, id):
         """
             Deletes a customer based on the provided ID. Returns the status code
@@ -45,7 +49,8 @@ class VendApi:
         return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['cust'], id), headers=self.__headers).status_code
 
     def deleteProduct(self, id):
-        return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['delProd'], id), headers=self.__headers).json()
+        #return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['delProd'], id), headers=self.__headers).json()
+        return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['delProd'], id), headers=self.__headers)
 
     def getRegisters(self):
         response = requests.request("GET", '{0}/{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"), headers=self.__headers)
@@ -57,21 +62,25 @@ class VendApi:
         """
             Returns array of customer objects of this store.
         """
-        #return self.__getRequest__(self.__domain + self.__ENDPOINTS['cust'] + "?deleted=" + str(False))
-        return self.__getSearch__(url=self.__domain + self.__ENDPOINTS['search'], type='customers')
+        return self.__getRequest__(self.__domain + self.__ENDPOINTS['cust'] + "?deleted=" + str(False))
+        #return self.__getSearch__(url=self.__domain + self.__ENDPOINTS['search'], type='customers')
 
     def getOnAccountSales(self):
         """
             Returns array of on-account sales for this store.
         """
 
-        return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'] + '?type=sales&status=onaccount')
+
+
+        #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'] + '?type=sales&status=onaccount')
+        #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'], type='sales', status='onaccount')
 
     def getLaybySales(self):
         """
             Returns array of layby sales for this store.
         """
-        return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'] + '?type=sales&status=layby')
+        #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'] + '?type=sales&status=layby')
+        return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'], type='sales', status='layby')
 
     def getOutlets(self):
         return self.__getRequest__(self.__domain + self.__ENDPOINTS['outlets'])
@@ -79,18 +88,27 @@ class VendApi:
     def getProducts(self):
         return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'] + '?deleted=false')
         #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'], type='products')
-    def __getSearch__(self, url, type='', deleted='false', offset='', pageSize='10000'):
+    def __getSearch__(self, url, type='', deleted='false', offset='', pageSize='10000', status=''):
         """
             Base method for search API calls. Returns the 'data' array of the
             corresponding objects. Returns None if the request is unsuccessful.
             Currently, the regular customers endpoint doesn't work properly
             with deleted flag; this will have to do at the moment.
         """
+
         search = "{0}?type={1}&deleted={2}&page_size={3}&offset={4}"
         endpoint = search.format(url, type, deleted, pageSize, offset)
+
+        print(type)
+        if type == 'sales':
+            search = "{0}?type={1}&status={2}&page_size={3}&offset={4}"
+            endpoint = search.format(url, type, status, pageSize, offset)
+
         response = requests.request("GET", endpoint, headers = self.__headers)
 
-        print(search.format(url, type, deleted, pageSize, offset))
+        print(endpoint)
+        print(response)
+        print(response.json())
 
         if response.status_code != 200:
             return None
@@ -102,12 +120,37 @@ class VendApi:
         while len(tempJson) > 0:
             data.extend(tempJson)
             offset += 10000
-            endpoint = search.format(url, type, deleted, pageSize, offset)
-            tempJson = requests.request("GET", endpoint, headers = self.__headers).json()['data']
-            print(len(tempJson))
-            print(len(data))
+
+            if type == 'sales':
+                endpoint = search.format(url, type, status, pageSize, offset)
+            else:
+                endpoint = search.format(url, type, deleted, pageSize, offset)
+
+            #print(endpoint)
+
+            request = requests.request("GET", endpoint, headers = self.__headers)
+
+            print(request)
+
+            if request.status_code == 500:
+                break
+
+            tempJson = request.json()['data']
+            #print(len(tempJson))
+            #print(len(data))
 
         return data
+
+    def getAllSales(self):
+        return self.__getRequest__('{0}{1}'.format(self.__domain, self.__ENDPOINTS['sales']))
+
+    def filterOpenSales(self, sales):
+        opensales = []
+        for s in sales:
+            if s['status'] == 'ONACCOUNT' or s['status'] == 'LAYBY' or s['status'] == 'SAVED':
+                opensales.append(s)
+
+        return opensales
 
     def getOpenSales(self):
         """
@@ -115,11 +158,18 @@ class VendApi:
             on-account sales.
         """
 
+        allSales = self.getAllSales()
+
+        opensales = self.filterOpenSales(allSales)
+
+        '''
         tempOpenSales = []
         tempOpenSales.extend(self.getOnAccountSales())
         tempOpenSales.extend(self.getLaybySales())
+        print(tempOpenSales)
+        return tempOpenSales'''
 
-        return tempOpenSales
+        return opensales
 
     def getPrefix(self):
         """
