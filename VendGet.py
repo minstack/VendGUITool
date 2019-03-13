@@ -10,6 +10,8 @@ api = None
 START_DAY_TIME = "00:00"
 END_DAY_TIME = "23:59"
 
+##TODO: need to accept hour:minute to narrow down search
+
 def startRetrieve(getGui, callback=None):
 
     global gui
@@ -25,12 +27,12 @@ def startRetrieve(getGui, callback=None):
     localDateTo = gui.getDateTo()
 
     if pattern.match(localDateTo) is None:
-        gui.setStatus("Please make sure date-from is in YYYY-mm-dd format...")
+        gui.setStatus("Please make sure date-from is in YYYY-mm-dd HH:MM format...")
         gui.setReadyState()
         return
 
     if pattern.match(localDateFrom) is None:
-        gui.setStatus("Please make sure date-to is in YYYY-mm-dd format...")
+        gui.setStatus("Please make sure date-to is in YYYY-mm-dd HH:MM format...")
         gui.setReadyState()
         return
 
