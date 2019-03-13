@@ -18,13 +18,13 @@ def getColumn(csvFile, colName):
                                      # based on column name k
     return columns[colName]
 
-def writeListToCSV(output, colHeader, title, prefix):
+def writeListToCSV(output, title, prefix, colHeader=None):
     """
         Exports the provided array into a column with the provided column header
         as a CSV file with specified title as suffix to filename.
         Filename format: [prefix][datetime][title].csv
     """
-    if colHeader:
+    if colHeader is not None:
         output.insert(0, colHeader)
 
     rows = output
