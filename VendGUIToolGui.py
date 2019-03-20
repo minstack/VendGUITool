@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter.ttk import *
-
+from tkinter import messagebox
 
 class VendGUIToolGui:
 
@@ -25,3 +25,9 @@ class VendGUIToolGui:
 
     def main(self):
         self.root.mainloop()
+
+    def showMessageBox(self, title, message):
+        messagebox.showinfo(title, message)
+
+    def showError(self, title, message):
+        messagebox.showerror(title, message)
