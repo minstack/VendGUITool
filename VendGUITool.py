@@ -1,34 +1,68 @@
 from VendBulkDeleteGUI import *
 from VendGetGUI import *
 from VendGUIToolGui import *
+from GitHubApi import *
 import VendGet
 import VendBulkDelete as BulkDel
 from datetime import datetime as dt
+from os.path import expanduser
+import traceback
+import getpass
 
+VERSION_TAG = '1.0'
+ASSET_ID = 11542873
+NODE_ID = 'MDEyOlJlbGVhc2VBc3NldDExNTQyODcz'
+
+gitApi = GitHubApi(owner='minstack', repo='VendGUITool', token='')
 
 def retrieveToDelete(kwargs):
     kwargs['gui'] = bulkDelGui
     BulkDel.deleteFromRetrieve(kwargs=kwargs)
 
 
+def downloadUpdates(mainGui):
 
+
+    latestrelease = gitApi.getLatestReleaseJson()
+
+    if latestrelease['tag_name'] == VERSION_TAG \
+        and latestrelease['assets'][0]['id'] == ASSET_ID \
+        and latestrelease['assets'][0]['node_id'] == NODE_ID:
+        return False
+
+    #download latest update
+    userdesktop = expanduser('~') + '/Desktop'
+    filename = gitApi.downloadLatestRelease(path=userdesktop, extract=True)
+    updatedescription = latestrelease['body']
+
+    mainGui.showMessageBox(title=f"Updates v{latestrelease['tag_name']}", \
+                            message=f"Downloaded latest version to your desktop: {filename[:-4]}\n\nYou may delete this version.\n\nUpdate Details:\n{updatedescription}")
+
+    return True
 
 if __name__ == '__main__':
-    tabTitles = ["Bulk Delete", "Filtered Retrieve"]
-    mainGui = VendGUIToolGui(tabTitles)
 
-    global bulkDelGui
-    bulkDelGui = VendBulkDeleteGUI(BulkDel.startProcess, mainGui.tabs[tabTitles[0]])
+    try:
+        tabTitles = ["Bulk Delete", "Filtered Retrieve"]
+        mainGui = VendGUIToolGui(tabTitles)
 
-    global getGui
-    getGui = VendGetGUI(VendGet.startRetrieve, retrieveToDelete, mainGui.tabs[tabTitles[1]])
+        global bulkDelGui
+        bulkDelGui = VendBulkDeleteGUI(BulkDel.startProcess, mainGui.tabs[tabTitles[0]])
 
-    #VendBulkDeleteGUI.gui = bulkDelGui
+        global getGui
+        getGui = VendGetGUI(VendGet.startRetrieve, retrieveToDelete, mainGui.tabs[tabTitles[1]])
 
-    dtformat = "%Y-%m-%d"
-    now = dt.strftime(dt.now(), dtformat)
-    #dtnow = dt.strptime(dt.now(),dtformat)
-    getGui.setDateFrom(now)
-    getGui.setDateTo(now)
+        #VendBulkDeleteGUI.gui = bulkDelGui
 
-    mainGui.main()
+        dtformat = "%Y-%m-%d"
+        now = dt.strftime(dt.now(), dtformat)
+        #dtnow = dt.strptime(dt.now(),dtformat)
+        getGui.setDateFrom(now)
+        getGui.setDateTo(now)
+
+        #prevents the messagebox ok freezing and closes everything automatically
+        if not downloadUpdates(mainGui):
+            mainGui.main()
+    except Exception as e:
+        issue = gitApi.createIssue(title=getpass.getuser(), body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
+        mainGui.showError(title="Crashed!", message=f"Dev notified and assigned to issue: {issue['url']}")
