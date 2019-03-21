@@ -95,7 +95,7 @@ def startRetrieve(getGui, callback=None):
         gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue: {issue['url']}")
 
 def exportToCsv(list, header, type):
-    return CsvUtil.writeListToCSV(list, header, type, "")
+    return CsvUtil.writeListToCSV(output=list, colHeader=header, title=type, prefix="")
 
 def getColumnList(objs, header):
     list = []
