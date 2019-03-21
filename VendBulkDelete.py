@@ -493,6 +493,8 @@ def deleteFromRetrieve(kwargs):
     global gui
     gui = kwargs['gui']
 
+    gui.reset()
+
     gui.setPrefix(kwargs['prefix'])
     gui.setToken(kwargs['token'])
     gui.addCsvFile(kwargs['filename'], kwargs['filepath'])
