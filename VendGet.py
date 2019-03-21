@@ -2,9 +2,11 @@ import threading
 from VendApi import *
 import re
 from VendGetGUI import *
+from GitHubApi import *
 import CsvUtil
 from datetime import datetime as dt
 from os.path import expanduser
+import getpass
 
 api = None
 START_DAY_TIME = "00:00"
