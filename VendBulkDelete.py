@@ -1,6 +1,7 @@
 import csv
 from VendApi import *
 from VendBulkDeleteGUI import *
+from GitHubApi import *
 import re
 import threading
 import queue
@@ -9,11 +10,15 @@ import CsvUtil
 import traceback
 import os
 import time
+import getpass
 
 gui = None
 api = None
 retrieveFilepath = ""
 THREAD_COUNT = 1
+
+GITAPI = GitHubApi(owner='minstack', repo='VendGUITool', token='')
+USER = getpass.getuser()
 
 def startProcess(bulkDelGui):
     """
@@ -55,8 +60,9 @@ def startProcess(bulkDelGui):
 
         selectedFunc[selected](api)
         #processCustomers(api)
-    except Exception:
-       gui.setResult("Something went terribly wrong. Please contact support.\n{0}".format(traceback.format_exc()))
+    except Exception as e:
+        issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
+        gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue: {issue['url']}")
 
     # only runs if the bulk delete tab has been modified by retrieve tab
     # for convenience of user
