@@ -11,6 +11,8 @@ START_DAY_TIME = "00:00"
 END_DAY_TIME = "23:59"
 
 ##TODO: need to accept hour:minute to narrow down search
+GITAPI = GitHubApi(owner='minstack', repo='VendGUITool', token='')
+USER = getpass.getuser()
 
 def startRetrieve(getGui, callback=None):
 
@@ -37,55 +39,58 @@ def startRetrieve(getGui, callback=None):
         return
 
 
+    try:
+        global api
+        api = VendApi(gui.getPrefix(), gui.getToken())
+        objType = gui.getSelectedType()
 
-    global api
-    api = VendApi(gui.getPrefix(), gui.getToken())
-    objType = gui.getSelectedType()
+        timezone = getTimeZone(api)
 
-    timezone = getTimeZone(api)
+        gui.setStatus("Converting time to UTC format...")
+        utcDateFrom = ControlUtil.getUtcTime(localDateFrom, START_DAY_TIME, timezone)
+        utcDateTo = ControlUtil.getUtcTime(localDateTo, END_DAY_TIME, timezone)
 
-    gui.setStatus("Converting time to UTC format...")
-    utcDateFrom = ControlUtil.getUtcTime(localDateFrom, START_DAY_TIME, timezone)
-    utcDateTo = ControlUtil.getUtcTime(localDateTo, END_DAY_TIME, timezone)
+        gui.setStatus("Retrieving {0} for {1}...".format(objType, gui.getPrefix()))
+        vendObjs = getVendObjects(api, utcDateFrom, utcDateTo, objType)
 
-    gui.setStatus("Retrieving {0} for {1}...".format(objType, gui.getPrefix()))
-    vendObjs = getVendObjects(api, utcDateFrom, utcDateTo, objType)
+        if len(vendObjs) == 0:
+            gui.setStatus("There was nothing returned. Please check your dates...")
+            gui.setReadyState()
+            return
 
-    if len(vendObjs) == 0:
-        gui.setStatus("There was nothing returned. Please check your dates...")
-        gui.setReadyState()
-        return
+        gui.setStatus("Retrieved {0} {1}...".format(len(vendObjs), objType))
 
-    gui.setStatus("Retrieved {0} {1}...".format(len(vendObjs), objType))
-
-    objColHeader = {
-        "Products" : "id",
-        "Customers" : "customer_code"
-    }
-
-    currCsvHeader = objColHeader[objType]
-
-    listToWrite = getColumnList(vendObjs, currCsvHeader)
-    gui.setStatus("Exporting temp CSV for bulk delete...")
-    filepath = exportToCsv(listToWrite, currCsvHeader, objType)
-    filename = filepath.split('/')[-1]
-
-    msg = "Exported {0} {1} to {2}\ntemporarily to desktop.\n\n".format(len(vendObjs), objType, filename)
-    msg += "You can now go to Bulk Delete tab to delete."
-    gui.setResult(msg)
-    gui.setStatus('Done...')
-    gui.setReadyState()
-
-    if callback:
-        kargs = {
-            'prefix' : gui.getPrefix(),
-            'token' : gui.getToken(),
-            'filepath' : filepath,
-            'filename' : filename,
-            'entity' : objType
+        objColHeader = {
+            "Products" : "id",
+            "Customers" : "customer_code"
         }
 
-        callback(kwargs=kargs)
+        currCsvHeader = objColHeader[objType]
+
+        listToWrite = getColumnList(vendObjs, currCsvHeader)
+        gui.setStatus("Exporting temp CSV for bulk delete...")
+        filepath = exportToCsv(listToWrite, currCsvHeader, objType)
+        filename = filepath.split('/')[-1]
+
+        msg = "Exported {0} {1} to {2}\ntemporarily to desktop.\n\n".format(len(vendObjs), objType, filename)
+        msg += "You can now go to Bulk Delete tab to delete."
+        gui.setResult(msg)
+        gui.setStatus('Done...')
+        gui.setReadyState()
+
+        if callback:
+            kargs = {
+                'prefix' : gui.getPrefix(),
+                'token' : gui.getToken(),
+                'filepath' : filepath,
+                'filename' : filename,
+                'entity' : objType
+            }
+
+            callback(kwargs=kargs)
+    except Exception as e:
+        issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
+        gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue: {issue['url']}")
 
 def exportToCsv(list, header, type):
     return CsvUtil.writeListToCSV(list, header, type, "")
