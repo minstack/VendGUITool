@@ -9,11 +9,10 @@ from os.path import expanduser
 import traceback
 import getpass
 
-VERSION_TAG = '1.0'
-ASSET_ID = 11542873
-NODE_ID = 'MDEyOlJlbGVhc2VBc3NldDExNTQyODcz'
+VERSION_TAG = '1.1'
 
 gitApi = GitHubApi(owner='minstack', repo='VendGUITool', token='')
+USER = getpass.getuser()
 
 def retrieveToDelete(kwargs):
     kwargs['gui'] = bulkDelGui
@@ -25,9 +24,13 @@ def downloadUpdates(mainGui):
 
     latestrelease = gitApi.getLatestReleaseJson()
 
-    if latestrelease['tag_name'] == VERSION_TAG \
-        and latestrelease['assets'][0]['id'] == ASSET_ID \
-        and latestrelease['assets'][0]['node_id'] == NODE_ID:
+    tag = latestrelease.get('tag_name', None)
+
+    #no releases
+    if tag is None:
+        return False
+
+    if latestrelease['tag_name'] == VERSION_TAG:
         return False
 
     #download latest update
@@ -36,7 +39,9 @@ def downloadUpdates(mainGui):
     updatedescription = latestrelease['body']
 
     mainGui.showMessageBox(title=f"Updates v{latestrelease['tag_name']}", \
-                            message=f"Downloaded latest version to your desktop: {filename[:-4]}\n\nYou may delete this version.\n\nUpdate Details:\n{updatedescription}")
+                            message=f"Downloaded latest version to your desktop: \
+                                        {filename[:-4]}\n\nYou may delete this version.\
+                                        \n\nUpdate Details:\n{updatedescription}")
 
     return True
 
@@ -64,5 +69,5 @@ if __name__ == '__main__':
         if not downloadUpdates(mainGui):
             mainGui.main()
     except Exception as e:
-        issue = gitApi.createIssue(title=getpass.getuser(), body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
+        issue = gitApi.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
         mainGui.showError(title="Crashed!", message=f"Dev notified and assigned to issue: {issue['url']}")
