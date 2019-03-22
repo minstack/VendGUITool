@@ -17,7 +17,6 @@ api = None
 retrieveFilepath = ""
 THREAD_COUNT = 1
 
-loadData()
 USER = getpass.getuser()
 
 def startProcess(bulkDelGui):
@@ -62,7 +61,7 @@ def startProcess(bulkDelGui):
         #processCustomers(api)
     except Exception as e:
         issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
-        gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue: {issue['url']}")
+        gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue:\n{issue['url']}")
 
     # only runs if the bulk delete tab has been modified by retrieve tab
     # for convenience of user
@@ -518,6 +517,8 @@ def deleteFromRetrieve(kwargs):
 
     global retrieveFilepath
     retrieveFilepath = kwargs['filepath']
+
+loadData()
 
 if __name__ == "__main__":
     gui = VendBulkDeleteGUI(callback=startProcess)
