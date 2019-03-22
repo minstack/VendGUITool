@@ -8,6 +8,7 @@ from datetime import datetime as dt
 from os.path import expanduser
 import traceback
 import getpass
+import GitFeedbackIssue as gitfeedback
 
 VERSION_TAG = '1.2'
 
@@ -57,6 +58,9 @@ def loadData():
 
     gitApi = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
+def openFeedbackDialog():
+    gitfeedback.main()
+
 if __name__ == '__main__':
     loadData()
     try:
@@ -80,6 +84,7 @@ if __name__ == '__main__':
 
         #prevents the messagebox ok freezing and closes everything automatically
         if not downloadUpdates(mainGui):
+            mainGui.setFeedbackCommand(openFeedbackDialog)
             mainGui.main()
     except Exception as e:
         issue = gitApi.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
