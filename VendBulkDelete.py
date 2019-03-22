@@ -61,8 +61,11 @@ def startProcess(bulkDelGui):
         #processCustomers(api)
     except Exception as e:
         issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
-        gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue:\n{issue['url']}")
 
+        if issue is not None and issue.get('html_url', None is not None):
+            gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue:\n{issue['html_url']}")
+        else:
+            gui.setResult(f"Something went terribly wrong.\nCould not notify dev.\n{traceback.format_exc()}")
     # only runs if the bulk delete tab has been modified by retrieve tab
     # for convenience of user
     global retrieveFilepath
