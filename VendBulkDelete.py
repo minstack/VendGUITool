@@ -17,7 +17,7 @@ api = None
 retrieveFilepath = ""
 THREAD_COUNT = 1
 
-GITAPI = GitHubApi(owner='minstack', repo='VendGUITool', token='')
+loadData()
 USER = getpass.getuser()
 
 def startProcess(bulkDelGui):
@@ -30,12 +30,12 @@ def startProcess(bulkDelGui):
     gui = bulkDelGui
     if not gui.entriesHaveValues():
         ## error
-        gui.setStatus("Please have values for prefix, token and CSV...")
+        gui.setStatus("Please have values for prefix, token and CSV.")
         gui.setReadyState()
         return
 
     if not gui.isChecklistReady():
-        gui.setStatus("Please make sure checklist is completed...")
+        gui.setStatus("Please make sure checklist is completed.")
         gui.setReadyState()
         return
 
@@ -43,7 +43,7 @@ def startProcess(bulkDelGui):
 
     for file in gui.csvList:
         if pattern.match(file) is None:
-            gui.setStatus("Please make sure the selected files are .csv file...")
+            gui.setStatus("Please make sure the selected files are .csv file.")
             gui.setReadyState()
             return
 
@@ -106,7 +106,7 @@ def processProducts(api):
     numProdsToDelete = len(prodIdsToDelete)
 
     if numProdsToDelete == 0:
-        gui.setStatus("Please make sure CSV has an 'id' column...")
+        gui.setStatus("Please make sure CSV has an 'id' column.")
         gui.setReadyState()
         return
 
@@ -137,13 +137,13 @@ def processProducts(api):
 
     #process failed deletes, export
     if len(failedDeletes) > 0 :
-        gui.setStatus("Exporting {0} products that failed to delete...".format(len(failedDeletes)))
+        gui.setStatus("Exporting {0} products that failed to delete.".format(len(failedDeletes)))
         failedCsvPath = processFailedProducts(failedDeletes)
         filename = failedCsvPath.split('/')[-1]
         resultMsg += "Exported failed products to {0} to desktop.\n".format(filename)
 
     gui.setResult(resultMsg)
-    gui.setStatus("Done...")
+    gui.setStatus("Done.")
 
 def processFailedProducts(failedList):
 
@@ -229,7 +229,7 @@ def processCustomers(api):
     customers = api.getCustomers()
     #print(len(customers))
     if customers is None or len(customers) == 0:
-        gui.setStatus("Please double check that prefix/token are correct...")
+        gui.setStatus("Please double check that prefix/token are correct.")
         gui.setReadyState()
         return
 
@@ -245,7 +245,7 @@ def processCustomers(api):
 
     numCustToDelete = len(custCodeToDelete)
     if  numCustToDelete == 0:
-        gui.setStatus("Please make sure the provided CSV has customer_code column...")
+        gui.setStatus("Please make sure the provided CSV has customer_code column.")
         gui.setReadyState()
         return
 
@@ -289,7 +289,7 @@ def processCustomers(api):
         result[status_codes[3]].extend(r[status_codes[3]])
 
 
-    gui.setStatus("Successfully deleted {0} customers...".format(len(result[204])))
+    gui.setStatus("Successfully deleted {0} customers.".format(len(result[204])))
 
     resultCsv = None
 
@@ -341,7 +341,7 @@ def setResultMessage(result, resultCsv):
         msg += "Saved {0} to desktop.".format(openSalesCsv)
 
     gui.setResult(msg)
-    gui.setStatus("Done...")
+    gui.setStatus("Done.")
 
 
 def processFailedCustomers(failedCustomers, codeToId):
@@ -488,6 +488,17 @@ def getCustCodeToId(customers):
         codeToId[str(cust['customer_code']).lstrip("0")] = cust['id']
 
     return codeToId
+
+def loadData():
+
+    with open('data.json') as f:
+        data = json.load(f)
+
+    global GITAPI
+
+    #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
+
+    GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
 def deleteFromRetrieve(kwargs):
     global gui
