@@ -7,13 +7,13 @@ import CsvUtil
 from datetime import datetime as dt
 from os.path import expanduser
 import getpass
+import traceback
 
 api = None
 START_DAY_TIME = "00:00"
 END_DAY_TIME = "23:59"
 
 ##TODO: need to accept hour:minute to narrow down search
-GITAPI = GitHubApi(owner='minstack', repo='VendGUITool', token='')
 USER = getpass.getuser()
 
 def startRetrieve(getGui, callback=None):
@@ -22,7 +22,7 @@ def startRetrieve(getGui, callback=None):
     gui = getGui
     if not gui.entriesHaveValues():
         ## error
-        gui.setStatus("Please have values for prefix, token and dates...")
+        gui.setStatus("Please have values for prefix, token and dates.")
         gui.setReadyState()
         return
 
@@ -31,12 +31,12 @@ def startRetrieve(getGui, callback=None):
     localDateTo = gui.getDateTo()
 
     if pattern.match(localDateTo) is None:
-        gui.setStatus("Please make sure date-from is in YYYY-mm-dd HH:MM format...")
+        gui.setStatus("Please make sure date-from is in YYYY-mm-dd HH:MM format.")
         gui.setReadyState()
         return
 
     if pattern.match(localDateFrom) is None:
-        gui.setStatus("Please make sure date-to is in YYYY-mm-dd HH:MM format...")
+        gui.setStatus("Please make sure date-to is in YYYY-mm-dd HH:MM format.")
         gui.setReadyState()
         return
 
@@ -44,9 +44,16 @@ def startRetrieve(getGui, callback=None):
     try:
         global api
         api = VendApi(gui.getPrefix(), gui.getToken())
+
+
         objType = gui.getSelectedType()
 
         timezone = getTimeZone(api)
+
+        if timezone is None:
+            gui.setStatus("Please check prefix/token.")
+            gui.setReadyState()
+            return
 
         gui.setStatus("Converting time to UTC format...")
         utcDateFrom = ControlUtil.getUtcTime(localDateFrom, START_DAY_TIME, timezone)
@@ -55,8 +62,10 @@ def startRetrieve(getGui, callback=None):
         gui.setStatus("Retrieving {0} for {1}...".format(objType, gui.getPrefix()))
         vendObjs = getVendObjects(api, utcDateFrom, utcDateTo, objType)
 
-        if len(vendObjs) == 0:
-            gui.setStatus("There was nothing returned. Please check your dates...")
+        #print(vendObjs)
+
+        if vendObjs is None or len(vendObjs) == 0:
+            gui.setStatus("There was nothing returned. Please check your dates.")
             gui.setReadyState()
             return
 
@@ -92,7 +101,12 @@ def startRetrieve(getGui, callback=None):
             callback(kwargs=kargs)
     except Exception as e:
         issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
-        gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue: {issue['url']}")
+
+        if issue is not None and issue.get('html_url', None is not None):
+            gui.setResult(f"Something went terribly wrong.\nDev notified and assigned to issue:\n{issue['html_url']}")
+        else:
+            gui.setResult(f"Something went terribly wrong.\nCould not notify dev.\n{traceback.format_exc()}")
+        #print(traceback.format_exc())
 
 def exportToCsv(list, header, type):
     return CsvUtil.writeListToCSV(output=list, colHeader=header, title=type, prefix="")
@@ -112,6 +126,9 @@ def getVendObjects(api, utcDateFrom, utcDateTo, entityType):
     }
 
     objects = endpointCall[entityType]()
+
+    if objects is None or len(objects) == 0:
+        return None
 
     filteredObj = filterByDateRange(objects, utcDateFrom, utcDateTo)
 
@@ -139,10 +156,23 @@ def getTimeZone(api):
 
     outlets = api.getOutlets()
 
+    if outlets is None or len(outlets) == 0:
+        return None
+
     outlet = getMostUpdatedOutlet(outlets)
 
     return outlet['time_zone']
 
+def loadData():
+
+    with open('data.json') as f:
+        data = json.load(f)
+
+    global GITAPI
+
+    #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
+
+    GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
 def getMostUpdatedOutlet(outlets):
 
@@ -157,3 +187,5 @@ def getMostUpdatedOutlet(outlets):
 
 
     return maxOutlet
+
+loadData()
