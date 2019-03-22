@@ -9,9 +9,8 @@ from os.path import expanduser
 import traceback
 import getpass
 
-VERSION_TAG = '1.1'
+VERSION_TAG = '1.2'
 
-gitApi = GitHubApi(owner='minstack', repo='VendGUITool', token='')
 USER = getpass.getuser()
 
 def retrieveToDelete(kwargs):
@@ -26,11 +25,13 @@ def downloadUpdates(mainGui):
 
     tag = latestrelease.get('tag_name', None)
 
+    #print(tag, latestrelease['tag_name'])
+
     #no releases
     if tag is None:
         return False
 
-    if latestrelease['tag_name'] == VERSION_TAG:
+    if latestrelease['tag_name'] <= VERSION_TAG:
         return False
 
     #download latest update
@@ -45,11 +46,23 @@ def downloadUpdates(mainGui):
 
     return True
 
-if __name__ == '__main__':
+def loadData():
 
+    with open('data.json') as f:
+        data = json.load(f)
+
+    global gitApi
+
+    #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
+
+    gitApi = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
+
+if __name__ == '__main__':
+    loadData()
     try:
         tabTitles = ["Bulk Delete", "Filtered Retrieve"]
         mainGui = VendGUIToolGui(tabTitles)
+        mainGui.setVersion(VERSION_TAG)
 
         global bulkDelGui
         bulkDelGui = VendBulkDeleteGUI(BulkDel.startProcess, mainGui.tabs[tabTitles[0]])
@@ -70,4 +83,8 @@ if __name__ == '__main__':
             mainGui.main()
     except Exception as e:
         issue = gitApi.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
-        mainGui.showError(title="Crashed!", message=f"Dev notified and assigned to issue: {issue['url']}")
+
+        if issue is not None and issue.get('html_url', None is not None):
+            mainGui.showError(title="Crashed!", message=f"Dev notified and assigned to issue: {issue['html_url']}")
+        else:
+            mainGui.showError(f"Something went terribly wrong.\nCould not notify dev.\n{traceback.format_exc()}")
