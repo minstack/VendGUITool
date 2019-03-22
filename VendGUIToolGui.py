@@ -17,9 +17,18 @@ class VendGUIToolGui:
         self.tabs = {}
         self.createTabs(tabTitles)
 
-        self.btnSubmitFeedback= Button(self.root, text="Submit Feedback", font="Helvetica 11")
+        self.btnSubmitFeedback= Button(self.root, text="Submit Feedback", font="Helvetica 12")
         #self.btnSubmitFeedback.pack()
-        self.btnSubmitFeedback.place(x=595, y=0)
+
+        self.btnSubmitFeedback.place(x=17, y=0)
+        #self.btnSubmitFeedback.place(x=self.root.winfo_width()-125, y=self.root.winfo_height()-47)
+
+        '''
+        def d(event):
+            print(event.width,event.height)
+            self.btnSubmitFeedback.place(x=event.width-125, y=event.height-47)
+
+        sel .root.bind('<Configure>',d)'''
 
 
     def createTabs(self, tabTitles):
@@ -40,3 +49,6 @@ class VendGUIToolGui:
 
     def setVersion(self, version):
         self.root.title(f"{self.title} v{version}")
+
+    def setFeedbackCommand(self, command):
+        self.btnSubmitFeedback.configure(command=command)
