@@ -1,5 +1,5 @@
 from tkinter import *
-from tkinter.ttk import *
+import tkinter.ttk as ttk
 from tkinter import messagebox
 
 class VendGUIToolGui:
@@ -8,13 +8,19 @@ class VendGUIToolGui:
 
         self.root = Tk()
         self.root.geometry("700x500")
-        self.root.title("Vend GUI Tool")
+        self.title = "Vend GUI Tool"
         self.root.call('tk', 'scaling', '2.0')
-        self.note = Notebook(self.root)
+
+        self.note = ttk.Notebook(self.root)
         self.note.pack(fill=BOTH, expand=1)
 
         self.tabs = {}
         self.createTabs(tabTitles)
+
+        self.btnSubmitFeedback= Button(self.root, text="Submit Feedback", font="Helvetica 11")
+        #self.btnSubmitFeedback.pack()
+        self.btnSubmitFeedback.place(x=595, y=0)
+
 
     def createTabs(self, tabTitles):
 
@@ -31,3 +37,6 @@ class VendGUIToolGui:
 
     def showError(self, title, message):
         messagebox.showerror(title, message)
+
+    def setVersion(self, version):
+        self.root.title(f"{self.title} v{version}")
