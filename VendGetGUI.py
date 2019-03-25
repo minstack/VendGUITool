@@ -46,10 +46,10 @@ class VendGetGUI:
             Loads the user input controls onto the given parent frame
         """
         lblStorePrefix = Label(mainFrame, text="Store Prefix:", font="Helvetica 14 bold")
-        lblStorePrefix.grid(row=1, column=0, sticky=E)
+        lblStorePrefix.grid(row=0, column=0, sticky=E)
 
         lblToken = Label(mainFrame, text="Token:", font="Helvetica 14 bold")
-        lblToken.grid(row=2, column=0, sticky=E)
+        lblToken.grid(row=1, column=0, sticky=E)
 
         lblCsv = Label(mainFrame, text="CSV File:", font="Helvetica 14 bold")
         #lblCsv.grid(row=3, column=0, sticky=E)
@@ -57,20 +57,25 @@ class VendGetGUI:
         #textboxes
         self.txtPrefix = Entry(mainFrame)
         self.txtToken = Entry(mainFrame)
-        self.txtPrefix.grid(row=1,column=1, sticky=W, pady=5)
-        self.txtToken.grid(row=2,column=1, sticky=W, pady=5)
+        self.txtPrefix.grid(row=0,column=1, sticky=W, pady=5)
+        self.txtToken.grid(row=1,column=1, sticky=W, pady=5)
 
         lblDateFrom = Label(mainFrame, text="Date From:", font="Helvetica 14 bold")
-        lblDateFrom.grid(row=3, column=0, sticky=E)
+        lblDateFrom.grid(row=2, column=0, sticky=E)
         lblDateTo = Label(mainFrame, text="Date To:", font="Helvetica 14 bold")
-        lblDateTo.grid(row=4, column=0, sticky=E)
+        lblDateTo.grid(row=3, column=0, sticky=E)
 
         self.txtDateFrom = Entry(mainFrame)
         self.txtDateTo = Entry(mainFrame)
-        self.txtDateFrom.grid(row=3,column=1, sticky=W, pady=5)
-        self.txtDateTo.grid(row=4,column=1, sticky=W, pady=5)
+        self.txtDateFrom.grid(row=2,column=1, sticky=W, pady=5)
+        self.txtDateTo.grid(row=3,column=1, sticky=W, pady=5)
 
-        ControlUtil.addControl(self.TEXT_BOXES, self.txtToken, self.txtPrefix, self.txtDateFrom, self.txtDateTo)
+        lblticketnum = Label(mainFrame, text="Ticket #:", font="Helvetica 14 bold")
+        lblticketnum.grid(row=0, column=2, sticky=E, pady=5)
+        self.txtTicketNum = Entry(mainFrame)
+        self.txtTicketNum.grid(row=0,column=3, sticky=W, pady=5)
+
+        ControlUtil.addControl(self.TEXT_BOXES, self.txtToken, self.txtPrefix, self.txtDateFrom, self.txtDateTo, self.txtTicketNum)
     def __loadButtons__(self, mainFrame):
         """
             Loads the button controls onto the given parent frame
@@ -99,15 +104,15 @@ class VendGetGUI:
         temp.configure(state=DISABLED)
         temp.pack(anchor=W, pady=5)'''
 
-        radioFrame.grid(row=0, column=3, rowspan=4, padx=20, sticky=N)
+        radioFrame.grid(row=1, column=3, rowspan=4, padx=20, sticky=N)
 
-        self.btnToday = Button(mainFrame, text="Today", font="Helvetica 14", command=self.__setToday)
-        self.btnToday.grid(row=3, column=2, rowspan=2, sticky=N+E+S+W, pady=7)
+        self.btnToday = Button(mainFrame, text="Now", font="Helvetica 14", command=self.__setToday)
+        self.btnToday.grid(row=2, column=2, rowspan=2, sticky=N+E+S+W, pady=7)
 
         ControlUtil.addControl(self.BUTTONS, self.btnExport, self.btnReset, self.btnToday)
 
     def __setToday(self):
-        today = ControlUtil.getToday("%Y-%m-%d")
+        today = ControlUtil.getToday("%Y-%m-%d %H:%M")
 
         self.setDateFrom(today)
         self.setDateTo(today)
@@ -192,6 +197,9 @@ class VendGetGUI:
 
     def getToken(self):
         return self.txtToken.get().strip()
+
+    def getTicketNum(self):
+        return self.txtTicketNum.get().strip()
 
     def getSelectedType(self):
         return self.entityType.get()
