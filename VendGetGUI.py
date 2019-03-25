@@ -59,6 +59,10 @@ class VendGetGUI:
         self.txtToken = Entry(mainFrame)
         self.txtPrefix.grid(row=0,column=1, sticky=W, pady=5)
         self.txtToken.grid(row=1,column=1, sticky=W, pady=5)
+        lblticketnum = Label(mainFrame, text="Ticket #:", font="Helvetica 14 bold")
+        lblticketnum.grid(row=0, column=2, sticky=E, pady=5)
+        self.txtTicketNum = Entry(mainFrame)
+        self.txtTicketNum.grid(row=0,column=3, sticky=W, pady=5)
 
         lblDateFrom = Label(mainFrame, text="Date From:", font="Helvetica 14 bold")
         lblDateFrom.grid(row=2, column=0, sticky=E)
@@ -70,16 +74,16 @@ class VendGetGUI:
         self.txtDateFrom.grid(row=2,column=1, sticky=W, pady=5)
         self.txtDateTo.grid(row=3,column=1, sticky=W, pady=5)
 
-        lblticketnum = Label(mainFrame, text="Ticket #:", font="Helvetica 14 bold")
-        lblticketnum.grid(row=0, column=2, sticky=E, pady=5)
-        self.txtTicketNum = Entry(mainFrame)
-        self.txtTicketNum.grid(row=0,column=3, sticky=W, pady=5)
 
         ControlUtil.addControl(self.TEXT_BOXES, self.txtToken, self.txtPrefix, self.txtDateFrom, self.txtDateTo, self.txtTicketNum)
     def __loadButtons__(self, mainFrame):
         """
             Loads the button controls onto the given parent frame
         """
+
+        self.btnToday = Button(mainFrame, text="Now", font="Helvetica 14", command=self.__setToday)
+        self.btnToday.grid(row=2, column=2, rowspan=2, sticky=N+E+S+W, pady=7)
+
         btnframe = Frame(mainFrame)
         self.btnExport = Button(btnframe, text="Export Customers", command=self.startThread)
         self.btnExport.pack(side=RIGHT, padx=5)
@@ -106,8 +110,6 @@ class VendGetGUI:
 
         radioFrame.grid(row=1, column=3, rowspan=4, padx=20, sticky=N)
 
-        self.btnToday = Button(mainFrame, text="Now", font="Helvetica 14", command=self.__setToday)
-        self.btnToday.grid(row=2, column=2, rowspan=2, sticky=N+E+S+W, pady=7)
 
         ControlUtil.addControl(self.BUTTONS, self.btnExport, self.btnReset, self.btnToday)
 
