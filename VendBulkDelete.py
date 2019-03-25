@@ -11,6 +11,8 @@ import traceback
 import os
 import time
 import getpass
+from datetime import datetime
+from ToolUsageSheets import *
 
 gui = None
 api = None
@@ -18,6 +20,7 @@ retrieveFilepath = ""
 THREAD_COUNT = 1
 
 USER = getpass.getuser()
+APP_FUNCTION = "VendBulkDelete"
 
 def startProcess(bulkDelGui):
     """
@@ -29,7 +32,7 @@ def startProcess(bulkDelGui):
     gui = bulkDelGui
     if not gui.entriesHaveValues():
         ## error
-        gui.setStatus("Please have values for prefix, token and CSV.")
+        gui.setStatus("Please have values for prefix / token / ticket# / CSVs.")
         gui.setReadyState()
         return
 
@@ -59,6 +62,7 @@ def startProcess(bulkDelGui):
 
         selectedFunc[selected](api)
         #processCustomers(api)
+
     except Exception as e:
         issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
 
@@ -78,6 +82,26 @@ def startProcess(bulkDelGui):
 
 
     #print(api.getCustomers())
+
+def addActionEvents(app, user, date, process, result):
+
+    details=''
+
+    if process == "CUSTOMERS":
+        details = f"DELETED {process}:{len(result[204])},FAILED:{len(result[500])} due to open sales,ALREADY DELETED:{len(result[404])},RATE-LIMTED:{len(result[429])}"
+
+    else:
+        details = f"DELETED {process}:{len(result[1])},FAILED:{len(result[3])}"
+
+    toolusage.writeRow(**{
+        "user" : user,
+        "appfunction" : app,
+        "completedon" : date,
+        "prefix" : gui.getPrefix(),
+        "ticketnum" : gui.getTicketNum(),
+        "details" : details
+    })
+
 
 def getThreadCount(api, deleteCount):
 
@@ -144,8 +168,12 @@ def processProducts(api):
         filename = failedCsvPath.split('/')[-1]
         resultMsg += "Exported failed products to {0} to desktop.\n".format(filename)
 
+
+    addActionEvents(APP_FUNCTION, USER, str(datetime.now()), "PRODUCTS", result)
+
     gui.setResult(resultMsg)
     gui.setStatus("Done.")
+
 
 def processFailedProducts(failedList):
 
@@ -300,6 +328,8 @@ def processCustomers(api):
 
     setResultMessage(result, resultCsv)
 
+
+
 def getSubLists(arr, numSubs):
     """
         Helper to return array of subarrays of the provided array and number of
@@ -333,14 +363,20 @@ def setResultMessage(result, resultCsv):
         openSalesCsv = resultCsv.get('opensales', None)
 
     successfulDeletes = len(result[204])
+    alreadyDeleted = len(result[404])
 
     msg = "{0} customers were successfully deleted.\n".format(successfulDeletes)
+
+    if alreadyDeleted > 0:
+        msg = "{0} were already deleted before this was run.\n".format(alreadyDeleted)
 
     if failedCsv:
         msg += "{0} could not be deleted. \nSaved {1} to desktop.\n".format(len(result[500]), failedCsv)
 
     if openSalesCsv:
         msg += "Saved {0} to desktop.".format(openSalesCsv)
+
+    addActionEvents(APP_FUNCTION, USER, str(datetime.now()), "CUSTOMERS", result)
 
     gui.setResult(msg)
     gui.setStatus("Done.")
@@ -502,6 +538,11 @@ def loadData():
 
     GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
+    global toolusage
+    toolusage = ToolUsageSheets(credsfile=data['credjson'], \
+                                sheetId=data['sheetId'], \
+                                sheetName=data['sheetName'])
+
 def deleteFromRetrieve(kwargs):
     global gui
     gui = kwargs['gui']
@@ -510,6 +551,7 @@ def deleteFromRetrieve(kwargs):
 
     gui.setPrefix(kwargs['prefix'])
     gui.setToken(kwargs['token'])
+    gui.setTicketNum(kwargs['ticketnum'])
     gui.addCsvFile(kwargs['filename'], kwargs['filepath'])
 
     entityType = kwargs['entity']
