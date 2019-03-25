@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
         #VendBulkDeleteGUI.gui = bulkDelGui
 
-        dtformat = "%Y-%m-%d"
+        dtformat = "%Y-%m-%d %H:%M"
         now = dt.strftime(dt.now(), dtformat)
         #dtnow = dt.strptime(dt.now(),dtformat)
         getGui.setDateFrom(now)
