@@ -34,8 +34,9 @@ class VendBulkDeleteGUI:
 
         self.__loadUserInputs__(mainFrame)
         self.__loadButtons__(mainFrame)
-        self.__loadCsvControl__(mainFrame)
         self.__loadCheckListControl__(mainFrame)
+        self.__loadCsvControl__(mainFrame)
+
         self.__loadMessageControls__(mainFrame)
         mainFrame.pack(padx=30, pady=10, fill=BOTH, expand=1)
 
@@ -45,10 +46,10 @@ class VendBulkDeleteGUI:
             Loads the user input controls onto the given parent frame
         """
         lblStorePrefix = Label(mainFrame, text="Store Prefix:", font="Helvetica 14 bold")
-        lblStorePrefix.grid(row=1, column=0, sticky=E)
+        lblStorePrefix.grid(row=0, column=0, sticky=E)
 
         lblToken = Label(mainFrame, text="Token:", font="Helvetica 14 bold")
-        lblToken.grid(row=2, column=0, sticky=E)
+        lblToken.grid(row=1, column=0, sticky=E)
 
         lblCsv = Label(mainFrame, text="CSV File:", font="Helvetica 14 bold")
         #lblCsv.grid(row=3, column=0, sticky=E)
@@ -56,10 +57,15 @@ class VendBulkDeleteGUI:
         #textboxes
         self.txtPrefix = Entry(mainFrame)
         self.txtToken = Entry(mainFrame)
-        self.txtPrefix.grid(row=1,column=1, sticky=W)
-        self.txtToken.grid(row=2,column=1, sticky=W)
+        self.txtPrefix.grid(row=0,column=1, sticky=W)
+        self.txtToken.grid(row=1,column=1, sticky=W)
 
-        ControlUtil.addControl(self.TEXT_BOXES, self.txtPrefix, self.txtToken)
+        lblticketnum = Label(mainFrame, text="Ticket #:", font="Helvetica 14 bold")
+        lblticketnum.grid(row=2, column=0, sticky=E)
+        self.txtTicketNum = Entry(mainFrame)
+        self.txtTicketNum.grid(row=2, column=1, sticky=W)
+
+        ControlUtil.addControl(self.TEXT_BOXES, self.txtPrefix, self.txtToken, self.txtTicketNum)
 
     def __loadButtons__(self, mainFrame):
         """
@@ -70,7 +76,7 @@ class VendBulkDeleteGUI:
         self.btnDelCust.pack(side=RIGHT, padx=5)
         self.btnReset = Button(btnframe, text="Reset", command=self.reset)
         self.btnReset.pack()
-        btnframe.grid(row=5, column=1, padx=5, pady=10)
+        btnframe.grid(row=5, column=1, padx=5, pady=5)
 
         radioFrame = Frame(mainFrame)
         radioFrame.grid(row=4, column=1)
@@ -96,18 +102,18 @@ class VendBulkDeleteGUI:
         """
         self.csvList = []
         self.csvFileDict = {}
-        self.csvListbox = Listbox(mainFrame, listvariable=self.csvList, width=25, bd=0.5, selectmode='single')
+        self.csvListbox = Listbox(mainFrame, listvariable=self.csvList, width=30, height=10, bd=0.5, selectmode='single')
 
 
         #csvHeader.grid(row=0, column=2)
-        self.csvListbox.grid(row=1, column=2, rowspan=3, padx=10, pady=5)
+        self.csvListbox.grid(row=0, column=2, rowspan=5, padx=10, pady=5)
 
         csvFrame = Frame(mainFrame, padx=10)
 
         csvHeader = Label(csvFrame, text="CSV Files", font="Helvetica 14 bold")
         csvHeader.pack(side=LEFT)
 
-        csvFrame.grid(row=4, column=2, sticky=E)
+        csvFrame.grid(row=5, column=2, sticky=E)
         self.btnOpenCsvDialog = Button(csvFrame, text="+", font="Helvetica 14 bold", command=self.openFile, width=3)
         self.btnOpenCsvDialog.pack(side=LEFT)
         self.btnDeleteFile = Button(csvFrame, text="-", font="Helvetica 14 bold", command=self.deleteFileFromList, width=3)
@@ -119,16 +125,16 @@ class VendBulkDeleteGUI:
         """
             Loads the check list controls onto the given parent frame
         """
-        checklistFrame = Frame(mainFrame, width=200, height=200, bd=1)
+        checklistFrame = Frame(mainFrame, width=50, height=50, bd=1)
         #Label(mainFrame, text="Checklist", font="Helvetica 14 bold").grid(row=0, column=3)
         checklistFrame.grid(row=3, column=1)
 
         self.paConfirmation = BooleanVar()
         self.tokenExpiry = BooleanVar()
         self.chkPaConfirm = Checkbutton(checklistFrame, text="PA Confirmation", variable=self.paConfirmation)
-        self.chkPaConfirm.grid(row=1, sticky=W)
+        self.chkPaConfirm.grid(row=0, sticky=W)
         self.chkTokenExpiry = Checkbutton(checklistFrame, text="Token Expiry Set", variable=self.tokenExpiry)
-        self.chkTokenExpiry.grid(row=2, sticky=W)
+        self.chkTokenExpiry.grid(row=1, sticky=W)
 
         ControlUtil.addControl(self.BUTTONS, self.chkPaConfirm, self.chkTokenExpiry)
 
@@ -245,6 +251,10 @@ class VendBulkDeleteGUI:
         self.txtToken.delete(0, END)
         self.txtToken.insert(0, token)
 
+    def setTicketNum(self, ticketnum):
+        self.txtTicketNum.delete(0, END)
+        self.txtTicketNum.insert(0, ticketnum)
+
     def setStatus(self, msg):
         """ Sets the status message to the provided string. """
         self.statusMsg.set(msg)
@@ -268,6 +278,9 @@ class VendBulkDeleteGUI:
         ControlUtil.setControlState(self.TEXT_BOXES, NORMAL)
         ControlUtil.setControlState(self.BUTTONS, NORMAL)
         self.root.update()
+
+    def getTicketNum(self):
+        return self.txtTicketNum.get().strip()
 
     def main(self):
         """ Main loop for this GUI. """
