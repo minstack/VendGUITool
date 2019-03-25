@@ -81,7 +81,7 @@ def startProcess(bulkDelGui):
             pass
 
 
-    #print(api.getCustomers())
+    ##print(api.getCustomers())
 
 def addActionEvents(app, user, date, process, result):
 
@@ -108,13 +108,15 @@ def getThreadCount(api, deleteCount):
     numRegisters = len(api.getRegisters()['data'])
     threads = numRegisters - 1 #from testing registercount = threads still seem to get rate limited
 
-    if threads == 0 or deleteCount < 350:
-        threads = 1
 
     if numRegisters > 6:
         threads = 6
 
-    print(threads)
+    if threads == 0 or deleteCount < 350:
+        #print('in thread 1 result')
+        threads = 1
+
+    ##print(threads)
 
     return threads
 
@@ -135,13 +137,15 @@ def processProducts(api):
         gui.setStatus("Please make sure CSV has an 'id' column.")
         gui.setReadyState()
         return
-
+    #print(numProdsToDelete)
     THREAD_COUNT = getThreadCount(api, numProdsToDelete)
-
+    ##print(THREAD_COUNT)
     sublists = getSubLists(prodIdsToDelete, THREAD_COUNT)
-
+    ##print(sublists)
     outQueue = queue.Queue()
     threads = []
+
+    #print(sublists)
 
     for sublist in sublists:
         tempThread = threading.Thread(target=deleteProducts, args=(sublist,numProdsToDelete, api,outQueue,))
@@ -204,6 +208,7 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
     }
 
     i = 0
+    prodDelCount = 0
     while i < numProdsToDelete:
         currProd = subarr.pop()
         resultObj = api.deleteProduct(currProd)
@@ -216,14 +221,17 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
             continue
 
         r = resultObj.json()
-        result[len(r)][prod] = r
+        result[len(r)][currProd] = r
+
+        #print(result)
+        #print(len(r))
 
         if len(r) == 1:
             prodDelCount += 1
-        else:
-            print(r)
+        
 
         gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
+        i += 1
 
     '''
     for prod in subarr:
@@ -235,7 +243,7 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
         if len(r) == 1:
             prodDelCount += 1
         else:
-            print(r)
+            #print(r)
 
         gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
 
@@ -257,7 +265,7 @@ def processCustomers(api):
     """
     gui.setStatus("Retreiving customers...")
     customers = api.getCustomers()
-    #print(len(customers))
+    ##print(len(customers))
     if customers is None or len(customers) == 0:
         gui.setStatus("Please double check that prefix/token are correct.")
         gui.setReadyState()
@@ -285,7 +293,7 @@ def processCustomers(api):
 
     subArrs = getSubLists(custCodeToDelete, THREAD_COUNT)
 
-    #print(len(subArrs))
+    ##print(len(subArrs))
     #time.sleep(60)
 
     outQueue = queue.Queue()
@@ -395,8 +403,8 @@ def processFailedCustomers(failedCustomers, codeToId):
     gui.setStatus("Retreiving open sales...")
     openSales = api.getOpenSales()
 
-    #print(openSales)
-    #print('after get open sales')
+    ##print(openSales)
+    ##print('after get open sales')
     # filter opensales based on customers to delete
     failedCustomers.remove('customer_code')
     matchedOpenSales = getOpenSaleMatch(failedCustomers, codeToId, openSales)
@@ -477,10 +485,10 @@ def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
             continue
 
         response = api.deleteCustomer(currId)
-        #print(response)
+        ##print(response)
         #rate limited put the code back so we still have the left over code list
         if response == 429:
-            print("429")
+            #print("429")
             custCodeToDelete.append(currCode)
             resultDict[response] = custCodeToDelete
             gui.setStatus("Rate limited: will retry in 5 minutes, you can continue to work on something else...")
@@ -500,7 +508,7 @@ def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
             continue
 
         response = api.deleteCustomer(codeToDel)
-        #print(response)
+        ##print(response)
         resultDict[response].append(code)
         gui.setStatus("Deleting customer {0} out of {1}".format(deletedCust, totalCust))
 
@@ -511,7 +519,7 @@ def deleteCustomers(custCodeToDelete, codeToId, totalCust, api, outQueue=None):
     if outQueue:
         outQueue.put(resultDict)
         return
-    #print(resultDict)
+    ##print(resultDict)
     return resultDict
 
 def getCustCodeToId(customers):
@@ -522,7 +530,7 @@ def getCustCodeToId(customers):
     codeToId = {}
 
     for cust in customers:
-        #print(cust['customer_code'])
+        ##print(cust['customer_code'])
         codeToId[str(cust['customer_code']).lstrip("0")] = cust['id']
 
     return codeToId
@@ -534,7 +542,7 @@ def loadData():
 
     global GITAPI
 
-    #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
+    ##print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
 
     GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
