@@ -9,12 +9,12 @@ import json
 def submitIssue(inputs, root):
     label = inputs['label'].get()
     user = inputs['user'].get()
-    email = inputs['email'].get()
+    subject = inputs['subject'].get()
     feedback = inputs['feedback'].get(1.0, END)
 
     creds = getData()
 
-    issue = gitApi.createIssue(title=f"[{label}]{user}", body=f"{feedback}\n{email}", assignees=["minstack"], labels=[f"{label.lower()}"]).json()
+    issue = gitApi.createIssue(title=f"[{label}]{user}:{subject}", body=f"{feedback}", assignees=["minstack"], labels=[f"{label.lower()}"]).json()
     print(issue)
     if issue is not None:
         displayMessage(f"Thank you for your submission!\nThe {label} was submitted to\n{issue['html_url']}", root)
@@ -40,12 +40,12 @@ def setGitApi(api):
 
 def main():
     root = Tk()
-    root.geometry("350x500")
+    root.geometry("350x400")
     root.call('tk','scaling', 2.0)
     root.title("Submit Feedback")
 
     lbluser = Label(root, text="User")
-    lblemail = Label(root, text="Email")
+    lblsubject = Label(root, text="Subject")
     lblfeedback = Label(root, text="Feedback")
     lbllabel = Label(root, text="Type")
 
@@ -53,7 +53,7 @@ def main():
 
     txtuser = Entry(root, width=100)
     txtuser.insert(0, getpass.getuser())
-    txtemail = Entry(root, width=100)
+    txtsubject = Entry(root, width=100)
     txtfeedback = ScrolledText(root, width=100, height=10)
     #txtfeedback = ScrolledText(root, width=100, bd=1)
     strLabel = StringVar()
@@ -62,8 +62,8 @@ def main():
 
     lbluser.pack(fill=X)
     txtuser.pack(padx=5)
-    lblemail.pack(fill=X)
-    txtemail.pack(padx=5)
+    lblsubject.pack(fill=X)
+    txtsubject.pack(padx=5)
     lbllabel.pack(fill=X)
     cboLabel.pack(padx=5, fill=X)
     lblfeedback.pack(fill=X)
@@ -71,7 +71,7 @@ def main():
 
     inputs = {
         'user' : txtuser,
-        'email' : txtemail,
+        'subject' : txtsubject,
         'label' : cboLabel,
         'feedback' : txtfeedback
     }
