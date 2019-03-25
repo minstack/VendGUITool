@@ -8,13 +8,14 @@ from datetime import datetime as dt
 from os.path import expanduser
 import getpass
 import traceback
+from ToolUsageSheets import *
 
 api = None
 START_DAY_TIME = "00:00"
 END_DAY_TIME = "23:59"
 
-##TODO: need to accept hour:minute to narrow down search
 USER = getpass.getuser()
+APP_FUNCTION = "VendFilteredRetreive"
 
 def startRetrieve(getGui, callback=None):
 
@@ -26,7 +27,8 @@ def startRetrieve(getGui, callback=None):
         gui.setReadyState()
         return
 
-    pattern = re.compile("^\d{4}(-\d{2}){2}")
+    #pattern = re.compile("^\d{4}(-\d{2}){2} ([0-1][0-9]|[2][0-3]):([0-5][0-9])$")
+    pattern = re.compile("^20\d{2}-((0[1-9])|(1[0-2]))-((0[1-9])|([1-2][0-9])|(3[0-1])) ([0-1][0-9]|[2][0-3]):([0-5][0-9])$")
     localDateFrom = gui.getDateFrom()
     localDateTo = gui.getDateTo()
 
@@ -56,8 +58,10 @@ def startRetrieve(getGui, callback=None):
             return
 
         gui.setStatus("Converting time to UTC format...")
-        utcDateFrom = ControlUtil.getUtcTime(localDateFrom, START_DAY_TIME, timezone)
-        utcDateTo = ControlUtil.getUtcTime(localDateTo, END_DAY_TIME, timezone)
+        #utcDateFrom = ControlUtil.getUtcTime(localDateFrom, START_DAY_TIME, timezone)
+        #utcDateTo = ControlUtil.getUtcTime(localDateTo, END_DAY_TIME, timezone)
+        utcDateFrom = ControlUtil.getUtcDateTime(localDateFrom, timezone)
+        utcDateTo = ControlUtil.getUtcDateTime(localDateTo, timezone)
 
         gui.setStatus("Retrieving {0} for {1}...".format(objType, gui.getPrefix()))
         vendObjs = getVendObjects(api, utcDateFrom, utcDateTo, objType)
@@ -87,12 +91,16 @@ def startRetrieve(getGui, callback=None):
         msg += "You can now go to Bulk Delete tab to delete."
         gui.setResult(msg)
         gui.setStatus('Done...')
+
+        addActionEvents(USER, APP_FUNCTION, objType, vendObjs)
+
         gui.setReadyState()
 
         if callback:
             kargs = {
                 'prefix' : gui.getPrefix(),
                 'token' : gui.getToken(),
+                'ticketnum' : gui.getTicketNum(),
                 'filepath' : filepath,
                 'filename' : filename,
                 'entity' : objType
@@ -107,6 +115,19 @@ def startRetrieve(getGui, callback=None):
         else:
             gui.setResult(f"Something went terribly wrong.\nCould not notify dev.\n{traceback.format_exc()}")
         #print(traceback.format_exc())
+
+def addActionEvents(user, app, type, results):
+
+    details = f"Retrieved {type}:{len(results)},DateFrom:{gui.getDateFrom()},DateTo:{gui.getDateTo()}"
+
+    toolusage.writeRow(**{
+        "user" : user,
+        "appfunction" : app,
+        "completedon" : str(dt.now()),
+        "prefix" : gui.getPrefix(),
+        "ticketnum" : gui.getTicketNum(),
+        "details" : details
+    })
 
 def exportToCsv(list, header, type):
     return CsvUtil.writeListToCSV(output=list, colHeader=header, title=type, prefix="")
@@ -146,6 +167,7 @@ def filterByDateRange(objs, dateFrom, dateTo):
         otime = otime[:16]
         oDate = dt.strptime(otime, dtfmt)
 
+        print(oDate)
         if dFrom <= oDate <= dTo:
             filtered.append(o)
 
@@ -173,6 +195,11 @@ def loadData():
     #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
 
     GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
+
+    global toolusage
+    toolusage = ToolUsageSheets(credsfile=data['credjson'], \
+                                sheetId=data['sheetId'], \
+                                sheetName=data['sheetName'])
 
 def getMostUpdatedOutlet(outlets):
 
