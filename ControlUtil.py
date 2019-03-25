@@ -33,5 +33,16 @@ def getUtcTime(localdate, localtime, timezone):
 
     return utc_dt.strftime(dtformat)
 
+def getUtcDateTime(localdatetime, timezone):
+
+    dtformat = "%Y-%m-%d %H:%M"
+    localTimezone = pytz.timezone(timezone)
+    naive = datetime.datetime.strptime(localdatetime, dtformat)
+
+    local_dt = localTimezone.localize(naive, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
+
+    return utc_dt.strftime(dtformat)
+
 def getToday(format):
     return datetime.datetime.now().strftime(format)
