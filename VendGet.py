@@ -185,21 +185,41 @@ def getTimeZone(api):
 
     return outlet['time_zone']
 
-def loadData():
+def setToolUsageObject(tool):
+    global toolusage
 
-    with open('data.json') as f:
-        data = json.load(f)
+    toolusage = tool
+
+def loadData(tool=None, git=None):
 
     global GITAPI
+    global toolusage
 
-    #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
+    if tool is not None:
+        toolusage = tool
+
+    if git is not None:
+        GITAPI = git
+        return
+
+    #for standalone for public with data to import
+    #creds obviously not commited to repo
+    try:
+        with open('data.json') as f:
+            data = json.load(f)
+    except Exception:
+        return
+
+
+    ##print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
 
     GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
-    global toolusage
+
+
     toolusage = ToolUsageSheets(credsfile=data['credjson'], \
                                 sheetId=data['sheetId'], \
-                                sheetName=data['sheetName'])
+                                sheetName=USER)
 
 def getMostUpdatedOutlet(outlets):
 
@@ -215,4 +235,7 @@ def getMostUpdatedOutlet(outlets):
 
     return maxOutlet
 
-loadData()
+if __name__ == '__main__':
+    #gui should be here but I don't think this should ever be standalone as
+    #the logic is meant to be in the gui to bulk delete right away
+    loadData()

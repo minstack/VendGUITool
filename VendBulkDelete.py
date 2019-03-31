@@ -228,7 +228,7 @@ def deleteProducts(subarr, numProdsToDelete, api, outQueue=None):
 
         if len(r) == 1:
             prodDelCount += 1
-        
+
 
         gui.setStatus("Deleted {0} products out of {1}...".format(prodDelCount, numProdsToDelete))
         i += 1
@@ -535,21 +535,45 @@ def getCustCodeToId(customers):
 
     return codeToId
 
-def loadData():
+#toolusage = None
 
-    with open('data.json') as f:
-        data = json.load(f)
+def loadData(tool=None, git=None):
 
     global GITAPI
+    global toolusage
+
+    if tool is not None:
+        toolusage = tool
+
+    if git is not None:
+        GITAPI = git
+        return
+
+    #for standalone for public with data to import
+    #creds obviously not commited to repo
+    try:
+        with open('data.json') as f:
+            data = json.load(f)
+    except Exception:
+        return
+
+
+
 
     ##print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
 
     GITAPI = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
 
-    global toolusage
+
+
     toolusage = ToolUsageSheets(credsfile=data['credjson'], \
                                 sheetId=data['sheetId'], \
-                                sheetName=data['sheetName'])
+                                sheetName=USER)
+
+def setToolUsageObject(tool):
+    global toolusage
+
+    toolusage = tool
 
 def deleteFromRetrieve(kwargs):
     global gui
@@ -571,7 +595,9 @@ def deleteFromRetrieve(kwargs):
     global retrieveFilepath
     retrieveFilepath = kwargs['filepath']
 
-loadData()
+
 
 if __name__ == "__main__":
     gui = VendBulkDeleteGUI(callback=startProcess)
+    loadData()
+    gui.main()
