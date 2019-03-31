@@ -15,10 +15,14 @@ class VendApi:
         "search" : "api/2.0/search",
         "sales" : "api/2.0/sales",
         "outlets" : "api/2.0/outlets",
-        "products" : "api/2.0/products",
+        "products2.0" : "api/2.0/products",
+        "products0.9" : "api/products",
         "delProd" : "api/products",
         "registers" : "api/2.0/registers",
-        "stockorders" : "api/consignment"
+        "stockorders" : "api/consignment",
+        "consignmentProduct" : "api/consignment_product",
+        "channels" : "api/2.0/channels",
+        "inventory" : "api/2.0/inventory"
     }
 
     __domain = ''
@@ -48,14 +52,43 @@ class VendApi:
         """
         return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['cust'], id), headers=self.__headers).status_code
 
+    def addConsignmentProductReceived(self, consignmentId, productId, count, cost):
+        url = f"{self.__domain}{self.__ENDPOINTS['consignmentProduct']}"
+        payload = {
+            "consignment_id" : consignmentId,
+            "product_id" : productId,
+            "count" : count,
+            "received" : count,
+            "cost" : cost
+        }
+
+        return requests.post(url, data=json.dumps(payload), headers=self.__headers)
+
+    def createStockOrder(self, outletid, name):
+        url = f"{self.__domain}{self.__ENDPOINTS['stockorders']}"
+        payload = {
+            "name" : name,
+            "outlet_id" : outletid,
+            "status" : "OPEN",
+            "type" : "SUPPLIER"
+        }
+
+        return requests.post(url, data=json.dumps(payload), headers=self.__headers)
+
+    def updateConsignment(self, consignmentObj):
+        url = f"{self.__domain}{self.__ENDPOINTS['stockorders']}/{consignmentObj['id']}"
+
+        consignmentObj['status'] = "RECEIVED"
+
+        return requests.put(url, data=json.dumps(consignmentObj), headers=self.__headers)
+
+
     def deleteProduct(self, id):
         #return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['delProd'], id), headers=self.__headers).json()
         return requests.request("DELETE", '{0}{1}/{2}'.format(self.__domain, self.__ENDPOINTS['delProd'], id), headers=self.__headers)
 
     def getRegisters(self):
-        response = requests.request("GET", '{0}/{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"), headers=self.__headers)
-        print(response)
-        print('{0}/{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"))
+
         return requests.request("GET", '{0}{1}'.format(self.__domain, self.__ENDPOINTS['registers'] + "?deleted=false"), headers=self.__headers).json()
 
     def getCustomers(self):
@@ -64,6 +97,12 @@ class VendApi:
         """
         return self.__getRequest__(self.__domain + self.__ENDPOINTS['cust'] + "?deleted=" + str(False))
         #return self.__getSearch__(url=self.__domain + self.__ENDPOINTS['search'], type='customers')
+
+    def getChannels(self):
+        return self.__getRequest__(self.__domain + self.__ENDPOINTS['channels'])
+
+    def getChannelEvents(self, id, params=None):
+        return self.__getRequest__(f"{self.__domain}{self.__ENDPOINTS['channels']}/{id}/events", params=params)
 
     def getOnAccountSales(self):
         """
@@ -85,9 +124,38 @@ class VendApi:
     def getOutlets(self):
         return self.__getRequest__(self.__domain + self.__ENDPOINTS['outlets'])
 
-    def getProducts(self):
-        return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'] + '?deleted=false')
+    def getProducts(self, endpointVersion='2.0'):
+        if endpointVersion == '2.0':
+            return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'+ endpointVersion]  + '?deleted=false')
+
+        params = {
+            "deleted" : False,
+            "page_size" : 200
+        }
+
+        return self.__getRequestv09__(self.__domain + self.__ENDPOINTS['products'+ endpointVersion], params=params)
+        #return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'] + '?deleted=false')
         #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'], type='products')
+
+    def updateProductInventory(self, id, inventory):
+        url = self.__domain + self.__ENDPOINTS['products0.9']
+
+        payload = {
+            "id" : id,
+            "inventory" : inventory
+        }
+
+        print(payload)
+
+        response = requests.post(url, data=json.dumps(payload), headers=self.__headers)
+
+        return response
+
+    def getInvenotries(self):
+        url = self.__domain + self.__ENDPOINTS['inventory']
+
+        return self.__getRequest__(url)
+
     def __getSearch__(self, url, type='', deleted='false', offset='', pageSize='10000', status=''):
         """
             Base method for search API calls. Returns the 'data' array of the
@@ -177,26 +245,58 @@ class VendApi:
         """
         return self.__prefix
 
-    def __getRequest__(self, url):
+    def __getRequestv09__(self, url, data='products', params=None):
+        response = requests.request("GET", url, headers = self.__headers, params=params)
+
+        if response.status_code != 200:
+            return None
+
+        tempJson = response.json()
+
+        pagination = tempJson['pagination']
+
+        currPage = pagination['page']
+        pages = pagination['pages']
+
+        tempData = []
+
+        while currPage <= pages:
+            tempData.extend(tempJson[data])
+
+            params['page'] = currPage + 1
+            currPage = currPage + 1
+
+            tempJson = requests.request("GET", url, headers = self.__headers, params=params).json()
+
+        return tempData
+
+    def __getRequest__(self, url, params={}):
         """
             Base method for regular API calls. Returns the 'data' array of the
             corresponding objects. Returns None if the request is unsuccessful.
             Will get all results based on the pagination, max version.
         """
-        response = requests.request("GET", url, headers = self.__headers)
+        if params.get('page_size', None) is None:
+            params['page_size'] = 2000
+
+        response = requests.request("GET", url, headers = self.__headers, params=params)
 
         if response.status_code != 200:
             return None
 
         # gotta check if the url already has params for search
         # no ternary in python?
-        if "?" in url:
+        '''if "?" in url:
             cursorParam = "&after={0}"
         else:
-            cursorParam = "?after={0}"
+            cursorParam = "?after={0}"'''
 
         tempDataList = []
         tempJson = response.json()
+
+        if tempJson.get('version', None) is None:
+            return tempJson['data']
+
         version = tempJson['version']['min']
 
         while version is not None:
@@ -207,6 +307,25 @@ class VendApi:
 
             version = tempJson['version']['max']
 
-            tempJson = requests.request("GET", url + cursorParam.format(version), headers = self.__headers).json()
+            params['after'] = version
+
+            #tempJson = requests.request("GET", url + cursorParam.format(version), headers = self.__headers).json()
+            tempJson = requests.request("GET", url , headers = self.__headers, params=params).json()
 
         return tempDataList
+
+    def connectSuccessful(self, obj):
+        return (obj is not None)
+
+    def getKeyToObjs(self, thatobjs, key):
+        idtoobj = {}
+
+        for o in thatobjs
+            id = o.get(key, None)
+
+            if id is None:
+                return None
+
+            o[id] = o
+
+        return idtoobj
