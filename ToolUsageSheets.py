@@ -17,9 +17,37 @@ class ToolUsageSheets:
     def __init__(self, credsfile, sheetId, sheetName, nextrowcell='K1'):
         self.credentials = ServiceAccountCredentials.from_json_keyfile_name(credsfile, self.scope)
         self.gc = gs.authorize(self.credentials)
-        #self.sheet = self.gc.open_by_key(sheetId).worksheet(sheetName)
-        self.sheet = self.gc.open_by_key(sheetId).worksheet(sheetName)
         self.NEXT_ROW_CELL = nextrowcell
+        #self.sheet = self.gc.open_by_key(sheetId).worksheet(sheetName)
+        try:
+            self.sheet = self.gc.open_by_key(sheetId).worksheet(sheetName)
+        except gs.exceptions.WorksheetNotFound:
+            self.createWorksheet(sheetId, sheetName)
+
+
+
+    def createWorksheet(self, id, name):
+        headers = ["completed_on", "user", "app_function", "prefix", "ticket", "details"]
+        range = self.ROW_RANGE.format(1, 1)
+        sheet = self.gc.open_by_key(id)
+        self.sheet = sheet.add_worksheet(title=name, rows="100", cols="15")
+
+        cell_list = self.sheet.range(range)
+
+        self.writeCellInCellList(cell_list=cell_list, rowToWrite=headers)
+
+        self.sheet.update_acell(self.NEXT_ROW_CELL, 2)
+
+
+    def writeCellInCellList(self, cell_list, rowToWrite):
+        i = 0
+        for cell in cell_list:
+            cell.value = rowToWrite[i]
+            i+=1
+            print(cell.value)
+
+        print(cell_list)
+        self.sheet.update_cells(cell_list)
 
     def writeRow(self, user, appfunction, completedon, prefix, ticketnum, details):
         rowNumToWrite = self.getNextRow()
