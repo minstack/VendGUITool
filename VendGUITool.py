@@ -1,16 +1,18 @@
 from VendBulkDeleteGUI import *
 from VendGetGUI import *
 from VendGUIToolGui import *
+from VendFixAvgCostGUI import *
 from GitHubApi import *
-import VendGet
+import VendFixAvgCost as fixavgcost
 import VendBulkDelete as BulkDel
+import VendGet as vendget
 from datetime import datetime as dt
 from os.path import expanduser
 import traceback
 import getpass
 import GitFeedbackIssue as gitfeedback
 
-VERSION_TAG = '1.2'
+VERSION_TAG = '1.3'
 
 USER = getpass.getuser()
 
@@ -47,24 +49,60 @@ def downloadUpdates(mainGui):
 
     return True
 
-def loadData():
-
-    with open('data.json') as f:
-        data = json.load(f)
+def loadData(tool=None, git=None):
 
     global gitApi
+    global toolusage
 
-    #print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
+    if tool is not None:
+        toolusage = tool
+
+    if git is not None:
+        gitApi = git
+        return
+
+    #for standalone for public with data to import
+    #creds obviously not commited to repo
+    try:
+        with open('data.json') as f:
+            data = json.load(f)
+    except Exception:
+        return
+
+
+
+
+    ##print(f"{data['owner']}: {data['repo']} : {data['ghtoken']}")
 
     gitApi = GitHubApi(owner=data['owner'], repo=data['repo'], token=data['ghtoken'])
+
+
+
+    toolusage = ToolUsageSheets(credsfile=data['credjson'], \
+                                sheetId=data['sheetId'], \
+                                sheetName=USER)
+
+def setToolAndGitToControllers():
+
+    vendget.loadData(tool=toolusage, git=gitApi)
+    BulkDel.loadData(tool=toolusage, git=gitApi)
+    fixavgcost.loadData(tool=toolusage, git=gitApi)
+
+
+def setToolsObjs():
+    VendGet.setToolUsageObject(toolusage)
+    BulkDel.setToolUsageObject(toolusage)
 
 def openFeedbackDialog():
     gitfeedback.main()
 
+import VendGet
+
 if __name__ == '__main__':
     loadData()
+    #setToolsObjs()
     try:
-        tabTitles = ["Bulk Delete", "Filtered Retrieve"]
+        tabTitles = ["Bulk Delete", "Filtered Retrieve", "Fix Avg Cost"]
         mainGui = VendGUIToolGui(tabTitles)
         mainGui.setVersion(VERSION_TAG)
 
@@ -74,6 +112,9 @@ if __name__ == '__main__':
         global getGui
         getGui = VendGetGUI(VendGet.startRetrieve, retrieveToDelete, mainGui.tabs[tabTitles[1]])
 
+        global facGui
+        facGui = VendFixAvgCostGUI(fixavgcost.startProcess, mainGui.tabs[tabTitles[2]])
+        fixavgcost.setGlobalGui(facGui)
         #VendBulkDeleteGUI.gui = bulkDelGui
 
         dtformat = "%Y-%m-%d %H:%M"
@@ -81,6 +122,8 @@ if __name__ == '__main__':
         #dtnow = dt.strptime(dt.now(),dtformat)
         getGui.setDateFrom(now)
         getGui.setDateTo(now)
+
+        setToolAndGitToControllers()
 
         #prevents the messagebox ok freezing and closes everything automatically
         if not downloadUpdates(mainGui):
