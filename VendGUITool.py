@@ -3,6 +3,7 @@ from VendGetGUI import *
 from VendGUIToolGui import *
 from VendFixAvgCostGUI import *
 from GitHubApi import *
+from ToolUsageSheets import *
 import VendFixAvgCost as fixavgcost
 import VendBulkDelete as BulkDel
 import VendGet as vendget
@@ -12,7 +13,7 @@ import traceback
 import getpass
 import GitFeedbackIssue as gitfeedback
 
-VERSION_TAG = '1.3'
+VERSION_TAG = '1.4'
 
 USER = getpass.getuser()
 
@@ -99,9 +100,10 @@ def openFeedbackDialog():
 import VendGet
 
 if __name__ == '__main__':
-    loadData()
+
     #setToolsObjs()
     try:
+        loadData()
         tabTitles = ["Bulk Delete", "Filtered Retrieve", "Fix Avg Cost"]
         mainGui = VendGUIToolGui(tabTitles)
         mainGui.setVersion(VERSION_TAG)
