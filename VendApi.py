@@ -1,4 +1,4 @@
-import requests
+import requests, json
 
 class VendApi:
     """
@@ -253,7 +253,10 @@ class VendApi:
 
         tempJson = response.json()
 
-        pagination = tempJson['pagination']
+        pagination = tempJson.get('pagination', None)
+
+        if pagination is None:
+            return tempJson['products']
 
         currPage = pagination['page']
         pages = pagination['pages']
@@ -320,7 +323,7 @@ class VendApi:
     def getKeyToObjs(self, thatobjs, key):
         idtoobj = {}
 
-        for o in thatobjs
+        for o in thatobjs:
             id = o.get(key, None)
 
             if id is None:
