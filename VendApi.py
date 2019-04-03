@@ -95,7 +95,7 @@ class VendApi:
         """
             Returns array of customer objects of this store.
         """
-        return self.__getRequest__(self.__domain + self.__ENDPOINTS['cust'] + "?deleted=" + str(False))
+        return self.__getRequest__(self.__domain + self.__ENDPOINTS['cust'])
         #return self.__getSearch__(url=self.__domain + self.__ENDPOINTS['search'], type='customers')
 
     def getChannels(self):
@@ -126,7 +126,10 @@ class VendApi:
 
     def getProducts(self, endpointVersion='2.0'):
         if endpointVersion == '2.0':
-            return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'+ endpointVersion]  + '?deleted=false')
+            #print('in 2.0')
+            prods = self.__getRequest__(self.__domain + self.__ENDPOINTS['products'+ endpointVersion])
+            print(f"in 2.0 prod returned: {len(prods)}")
+            return prods
 
         params = {
             "deleted" : False,
@@ -136,6 +139,9 @@ class VendApi:
         return self.__getRequestv09__(self.__domain + self.__ENDPOINTS['products'+ endpointVersion], params=params)
         #return self.__getRequest__(self.__domain + self.__ENDPOINTS['products'] + '?deleted=false')
         #return self.__getSearch__(self.__domain + self.__ENDPOINTS['search'], type='products')
+
+    def getProducts2(self):
+        return self.__getRequest__(self.__domain + self.__ENDPOINTS['products2.0'], params={'deleted':False})
 
     def updateProductInventory(self, id, inventory):
         url = self.__domain + self.__ENDPOINTS['products0.9']
@@ -151,10 +157,11 @@ class VendApi:
 
         return response
 
-    def getInvenotries(self):
+    def getInventories(self):
         url = self.__domain + self.__ENDPOINTS['inventory']
-
-        return self.__getRequest__(url)
+        data = self.__getRequest__(url)
+        print(f'getInventories: {len(data)}')
+        return data
 
     def __getSearch__(self, url, type='', deleted='false', offset='', pageSize='10000', status=''):
         """
@@ -287,6 +294,7 @@ class VendApi:
         if response.status_code != 200:
             return None
 
+        #print(url)
         # gotta check if the url already has params for search
         # no ternary in python?
         '''if "?" in url:
@@ -297,13 +305,17 @@ class VendApi:
         tempDataList = []
         tempJson = response.json()
 
+        #print(tempJson.get('version', None))
+
         if tempJson.get('version', None) is None:
             return tempJson['data']
 
         version = tempJson['version']['min']
 
         while version is not None:
+            #print(url)
             tempDataList.extend(tempJson['data'])
+            #print(len(tempDataList))
 
             if tempJson['version']['max'] is None:
                 break;
@@ -315,6 +327,7 @@ class VendApi:
             #tempJson = requests.request("GET", url + cursorParam.format(version), headers = self.__headers).json()
             tempJson = requests.request("GET", url , headers = self.__headers, params=params).json()
 
+        print(f"{url}: {len(tempDataList)}")
         return tempDataList
 
     def connectSuccessful(self, obj):
@@ -329,6 +342,6 @@ class VendApi:
             if id is None:
                 return None
 
-            o[id] = o
+            idtoobj[id] = o
 
         return idtoobj
