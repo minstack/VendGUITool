@@ -4,6 +4,7 @@ import threading
 from tkinter.filedialog import askopenfilename
 import ControlUtil
 from tkinter import messagebox
+from functools import partial
 #from tkFileDialog import askopenfilename
 
 class VendFixAvgCostGUI:
@@ -82,6 +83,9 @@ class VendFixAvgCostGUI:
         self.btnReset.pack()
         btnframe.grid(row=4, column=1, padx=5, pady=5)
 
+        self.btnGetAllMismatched = Button(mainFrame, text="Get All Mismatched")
+        self.btnGetAllMismatched.grid(row=4, column=2, sticky=W)
+
         '''
         radioFrame = Frame(mainFrame)
         radioFrame.grid(row=4, column=1)
@@ -99,7 +103,7 @@ class VendFixAvgCostGUI:
             'Products' : prodRadio
         }'''
 
-        ControlUtil.addControl(self.BUTTONS, self.btnFixAvgCost, self.btnReset)
+        ControlUtil.addControl(self.BUTTONS, self.btnFixAvgCost, self.btnReset, self.btnGetAllMismatched)
 
     def __loadCsvControl__(self, mainFrame):
         """
@@ -199,6 +203,13 @@ class VendFixAvgCostGUI:
         """
         return ControlUtil.entriesHaveValues(self.TEXT_BOXES) and (len(self.csvList) > 0)
 
+    def entriesHaveValuesNoCsv(self):
+        """
+            Returns true/false whether the required input values have been
+            provided
+        """
+        return ControlUtil.entriesHaveValues(self.TEXT_BOXES)
+
     def getFilePath(self, filename):
         return self.csvFileDict.get(filename, None)
 
@@ -296,3 +307,13 @@ class VendFixAvgCostGUI:
 
     def setVersion(self, version):
         self.root.title(f"{self.title} v{version}")
+
+    def __startGetMismatchedThread(self, callback):
+        self.setStatus("")
+        self.setDeletingState()
+        thr = threading.Thread(target=callback)
+
+        thr.start()
+
+    def setGetMismatchedProcess(self, callback):
+        self.btnGetAllMismatched.configure(command=partial(self.__startGetMismatchedThread, callback=callback))
