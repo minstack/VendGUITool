@@ -117,6 +117,7 @@ if __name__ == '__main__':
         global facGui
         facGui = VendFixAvgCostGUI(fixavgcost.startProcess, mainGui.tabs[tabTitles[2]])
         fixavgcost.setGlobalGui(facGui)
+        facGui.setGetMismatchedProcess(fixavgcost.getAllMismatchedCost)
         #VendBulkDeleteGUI.gui = bulkDelGui
 
         dtformat = "%Y-%m-%d %H:%M"
