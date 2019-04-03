@@ -265,13 +265,13 @@ def processCustomers(api):
     """
     gui.setStatus("Retreiving customers...")
     customers = api.getCustomers()
-    ##print(len(customers))
+    print(len(customers))
     if customers is None or len(customers) == 0:
         gui.setStatus("Please double check that prefix/token are correct.")
         gui.setReadyState()
         return
 
-    gui.setStatus("Retreived {0} customers...".format(len(customers)))
+    gui.setStatus("Retrieved {0} customers...".format(len(customers)))
 
     gui.setStatus("Matching IDs to provided customer code...")
     codeToId = getCustCodeToId(customers)
@@ -598,6 +598,6 @@ def deleteFromRetrieve(kwargs):
 
 
 if __name__ == "__main__":
-    gui = VendBulkDeleteGUI(callback=startProcess)
+    gui = VendBulkDeleteGUI(deletefunc=startProcess)
     loadData()
     gui.main()
