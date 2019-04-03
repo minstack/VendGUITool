@@ -30,6 +30,8 @@ def startProcess(bulkDelGui):
     global gui
     gui = bulkDelGui
 
+    checkEntries()
+    '''
     gui.setStatus("")
     if not gui.entriesHaveValues():
         ## error
@@ -40,7 +42,7 @@ def startProcess(bulkDelGui):
     if not gui.isChecklistReady():
         gui.setStatus("Please make sure checklist is completed.")
         gui.setReadyState()
-        return
+        return'''
 
     pattern = re.compile("^.+[.]csv$", re.IGNORECASE)
 
@@ -103,6 +105,226 @@ def startProcess(bulkDelGui):
             gui.showError(title="Crashed!", message=f"Something went terribly wrong.\nDev notified and assigned to issue:\n{issue['html_url']}")
         else:
             gui.showError(title="Crashed!", message=f"Something went terribly wrong.\nCould not notify dev.\n{traceback.format_exc()}")
+
+def checkEntries():
+
+
+    gui.setStatus("")
+    if not gui.entriesHaveValues():
+        ## error
+        gui.setStatus("Please have values for prefix, token, ticket # and CSV.")
+        gui.setReadyState()
+        return
+
+    if not gui.isChecklistReady():
+        gui.setStatus("Please make sure checklist is completed.")
+        gui.setReadyState()
+        return
+
+def getAllMismatchedCost():
+
+    gui.setStatus("")
+    if not gui.entriesHaveValuesNoCsv():
+        ## error
+        gui.setStatus("Please have values for prefix, token and ticket #.")
+        gui.setReadyState()
+        return
+
+    if not gui.isChecklistReady():
+        gui.setStatus("Please make sure checklist is completed.")
+        gui.setReadyState()
+        return
+
+    try:
+        api = VendApi(gui.txtPrefix.get().strip(), gui.txtToken.get().strip())
+
+        #Retrieval
+        outlets = api.getOutlets()
+
+        if not api.connectSuccessful(outlets):
+            gui.setStatus("Please make sure prefix/token are correct (expiry).")
+            gui.setReadyState()
+            return
+
+        gui.setStatus("Retrieving inventory records...")
+        inventories = api.getInventories()
+
+        print(f'in fixavgcost inventories: {len(inventories)}')
+        prodidtoinv = getPidToInventory(inventories)
+
+        #print(inventories)
+
+        gui.setStatus("Retrieving products...")
+        #prods = api.getProducts()
+        prods = api.getProducts2() #something weird is goig on with api.getProducts() returning only 1 product
+        #print(f"prods var: {len(prods)}")
+        # pidtoobj = api.getKeyToObjs(prods, 'id')
+        # print(f'{len(pidtoobj)} - pidtoobj')
+        #added sku,name,handle as well
+        prodid_cost = getProdIdAndCost(prods)
+
+
+
+        #JsonUtil.writeJsonToFile(products, 'products.json')
+
+        #print(products)
+        gui.setStatus("Finding mismatched supply_price - avg cost...")
+        # list of {'prod_id': id, 'supply_price' : supply_price, 'average_cost'}
+        mismatchedAndNoInvProds = getMismatchedProds(prodid_cost, prodidtoinv)
+        mismatchedProds = mismatchedAndNoInvProds['mismatched']
+        noinvprods = mismatchedAndNoInvProds['no_inventory_record']
+        # JsonUtil.writeJsonToFile(filename='prodidtoinv.json', data=prodidtoinv)
+        # JsonUtil.writeJsonToFile(filename='prodid_cost.json', data=prodid_cost)
+
+        print(f'mis: {len(mismatchedProds)}, noinv: {len(noinvprods)}')
+        if len(mismatchedProds) > 0:
+            gui.setStatus(f"Found {len(mismatchedProds)} mismatched products...exporting CSV...")
+            # exportFormat = getMismatchedToExport(mismatchedProds, pidtoobj)
+            exportFormat = getMismatchedToExport(mismatchedProds)
+
+            filepath = exportToCSV(exportFormat)
+
+            gui.setStatus(f"Exported CSV to {filepath}.")
+
+        addActionEvents(user=USER, app=APP_FUNCTION, date=str(datetime.now()), numfixed=len(mismatchedProds))
+        gui.setStatus("Done.")
+        gui.setReadyState()
+
+    except Exception as e:
+        issue = GITAPI.createIssue(title=f"[{USER}]{str(e)}", body=traceback.format_exc(), assignees=['minstack'], labels=['bug']).json()
+        #issue = None
+        if issue is not None and issue.get('html_url', None is not None):
+            gui.showError(title="Crashed!", message=f"Something went terribly wrong.\nDev notified and assigned to issue:\n{issue['html_url']}")
+        else:
+            gui.showError(title="Crashed!", message=f"Something went terribly wrong.\nCould not notify dev.\n{traceback.format_exc()}")
+
+def exportToCSV(exportFormat):
+
+    #print(exportFormat)
+
+    ids = exportFormat['id']
+    skus = exportFormat['sku']
+    handles = exportFormat['handle']
+    names = exportFormat['name']
+    supprices = exportFormat['supply_price']
+    avgcosts = exportFormat['average_cost']
+
+    zipped = zip(ids, skus, handles, names, supprices, avgcosts)
+
+    return CsvUtil.writeListToCSV(output=zipped, prefix=gui.getPrefix(), title="mismatchedcosts")
+
+
+
+def getMismatchedToExport(mismatched, pidtoobj=None):
+    exportready = {
+        'id' : [],
+        'sku' : [],
+        'handle' : [],
+        'name' : [],
+        'supply_price' : [],
+        'average_cost' : []
+    }
+
+    #JsonUtil.writeJsonToFile(filename='pidtoobjexport.json', data=pidtoobj)
+
+    for m in mismatched:
+        pid = m['prod_id']
+        supprice = m['supply_price']
+        avgcost = m['average_cost']
+        sku = m['sku']
+        handle = m['handle']
+        name = m['name']
+
+        # if pidtoobj.get(pid, None) is None:
+        #     #print(pid)
+        #     continue
+
+        # sku = pidtoobj[pid]['sku']
+        # handle = pidtoobj[pid]['handle']
+        # name = pidtoobj[pid]['name']
+
+
+        exportready['id'].append(pid)
+        exportready['sku'].append(sku)
+        exportready['handle'].append(handle)
+        exportready['name'].append(name)
+        exportready['supply_price'].append(supprice)
+        exportready['average_cost'].append(avgcost)
+
+    return formatExportHeaders(exportready)
+
+
+def formatExportHeaders(export):
+
+    for l in export:
+        export[l].insert(0, l)
+
+    return export
+
+
+def getMismatchedProds(pidcost, pidtoinv):
+
+    mismatched = []
+    #print(pidtoinv)
+
+    #JsonUtil.writeJsonToFile(pidcost, 'pidcost.json')
+    #JsonUtil.writeJsonToFile(pidtoinv, 'pidtoinv.json')
+    noinv = []
+    for pc in pidcost:
+        pid = pc['prod_id']
+        cost = float(pc['cost'])
+
+        prodinvs = pidtoinv.get(pid, None)
+
+        if prodinvs is None:
+            #print(f'no inventories: {pid}')
+            noinv.append(pc)
+            continue
+
+        for i in prodinvs:
+            curravgcost = float(i['average_cost'])
+
+            if curravgcost != cost:
+                #print(f"avgcost: {curravgcost}, supply_price: {cost}")
+                mismatched.append(
+                    {
+                        'prod_id' : pid,
+                        'supply_price' : cost,
+                        'average_cost' : curravgcost,
+                        'sku' : pc['sku'],
+                        'handle' : pc['handle'],
+                        'name' : pc['name']
+                    }
+                )
+                break
+
+    print(f'mismatched list: {len(mismatched)}\n')
+
+    return {'mismatched' : mismatched, 'no_inventory_record' : noinv}
+
+
+def getProdIdAndCost(prods):
+    pidandcost = []
+    #JsonUtil.writeJsonToFile(prods, 'prods.json')
+    #print(prods)
+    for p in prods:
+        pid = p['id']
+        cost = p['supply_price']
+        sku = p['sku']
+        handle = p['handle']
+        name = p['name']
+
+        pidandcost.append(
+            {
+                'prod_id' : pid,
+                'cost' : cost,
+                'name' : name,
+                'sku' : sku,
+                'handle' : handle
+            }
+        )
+
+    return pidandcost
 
 def receiveConsignments(consignments):
 
@@ -248,6 +470,26 @@ def addConsignmentProducts(api, consignments, prodIdToInventory):
                         response = api.addConsignmentProductReceived(consignmentId, pid, qty, supply_price)
 
     return negativeProds '''
+
+def getPidToInventory(inventories):
+    pidtoinv = {}
+
+    for inv in inventories:
+        prodId = inv['product_id']
+
+        invlist = pidtoinv.get(prodId, None)
+        # invlist = pidtoinv.get(prodId, []) #this should be the most efficient but not sure if this is not working
+
+        if invlist is None:
+            invlist = []
+
+        invlist.append(inv)
+
+        pidtoinv[prodId] = invlist
+
+    return pidtoinv
+
+
 
 def getInventoryWithPid(prodtoinventory):
     inventories = []
@@ -449,7 +691,7 @@ def getCsvProdsToFix():
 
 def addActionEvents(user, app, date, numfixed):
 
-    details = f"Number of products fixed: {numfixed}"
+    details = f"Number of mismatched products found: {numfixed}"
 
     toolusage.writeRow(**{
         "user" : user,
